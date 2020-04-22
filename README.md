@@ -10,6 +10,12 @@
 * install nodered modules npm 
 * test mqtt broker from outside, from inside 
 * set up a mockup test suite? 
+* security: 
+  * grafana: just change password
+  * nodered: how to handle credentials
+  * influxdb: keep it confined - expose? 
+  * mosquitto: keep it confined
+* backups: set up a backup procedure for all named volumes in the stack 
 
 
 ## Installation 
@@ -31,12 +37,16 @@ docker-compose up -d
 * grafana: [http://localhost:3000](http://localhost:3000)
 * nodered: [http://localhost:1880](http://localhost:1880)
 
+Passwords : ask Colin
+
 ### InfluxDB 
+
+**Not sure we need to access it from outside the stack**
 
 Explain: 
 
 * command line access
-* from python
+* from python (provide example script)
 
 
 
