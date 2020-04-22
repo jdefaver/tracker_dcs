@@ -2,19 +2,23 @@
 
 ## TODO
 
+* think about user interface and access
+* think about global architecture: inputs, outputs, role of mqtt and db, ... 
 * data generator in nodered to mqtt
 * influxDB loader (mqtt listener)
-  * python script?  
+  * python script? **Telegraf?**
   * think about topic naming for the loader
 * grafana dashboard to look at the data from influxdb
+  * how to initialize pre-built dashboard?    
 * install nodered modules npm 
+  * ask pavel about the utility of each package
 * test mqtt broker from outside, from inside 
 * set up a mockup test suite? 
 * security: 
   * grafana: just change password
   * nodered: how to handle credentials
   * influxdb: keep it confined - expose? 
-  * mosquitto: keep it confined
+  * mosquitto: keep it confined - securing mosquitto is too painful. 
 * backups: set up a backup procedure for all named volumes in the stack 
 
 
