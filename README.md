@@ -1,5 +1,9 @@
 # Tracker DCS Lyon
 
+## Overall Architecture
+
+![](doc/architecture.png)
+
 ## TODO
 
 * think about user interface and access
