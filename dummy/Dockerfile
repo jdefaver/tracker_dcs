@@ -2,9 +2,9 @@ FROM python:3
 
 WORKDIR /usr/src/app
 
-COPY requirements.txt ./
+COPY ../trackerdcs/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ../trackerdcs .
 
 CMD [ "python", "-m", "unittest",  "discover"]

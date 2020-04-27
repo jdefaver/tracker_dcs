@@ -1,0 +1,10 @@
+version: "3"
+services:
+  hv:
+    build: ./trackerdcs
+    links:
+      - mosquitto
+    command: ['python', 'dummy/hv.py']
+
+
+
