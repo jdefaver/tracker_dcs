@@ -1,0 +1,19 @@
+version: "3"
+services:
+  influxdb:
+    ports:
+      - "8086:8086"
+  dashboard:
+    ports:
+      - "3000:3000"
+  nodered:
+    ports:
+      - "1880:1880"
+  mosquitto:
+    ports:
+      - "1883:1883"
+  test:
+    build: ./test
+    links:
+      - "mosquitto"
+
