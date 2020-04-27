@@ -2,8 +2,6 @@ from influxdb import InfluxDBClient
 import requests
 
 import time
-import math
-import sys
 
 client = None
 dbname = None
