@@ -21,13 +21,16 @@ services:
       - nodered:/data
   mosquitto:
     image: eclipse-mosquitto
-    ports:
-      - "1883:1883"
-      - "9001:9001"
+    expose:
+      - "1883"
     volumes:
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+  test:
+    build: ./test
+    links:
+      - "mosquitto"
 
 volumes:
   influxdb:
