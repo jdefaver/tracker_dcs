@@ -66,6 +66,20 @@ docker-compose up -d
 Passwords : ask Colin
 
 
+## Development mode 
+
+To start the stack in development mode: 
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+
+To run the test suite: 
+
+```
+python -m unittest discover test/
+```
+
 ## TODO
 
 * think about user interface and access
