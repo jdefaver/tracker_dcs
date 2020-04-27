@@ -23,6 +23,8 @@ services:
     image: eclipse-mosquitto
     expose:
       - "1883"
+    ports:
+      - "1883:1883"
     volumes:
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
