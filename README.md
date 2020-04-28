@@ -96,7 +96,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 To run the unit test suite: 
 
 ```
-python -m unittest discover test/
+python -m unittest discover trackerdcs/
 ```
 
 ## TODO
