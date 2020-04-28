@@ -23,8 +23,10 @@ only need to send and receive simple information, like a power-on instruction,
 or a temperature reading as a function of time. 
 
 An exception is the PH2ACF interface. A calibration run will generate a large amount of data.
-This data will probably directly be sent to InfluxDB, or maybe another database service like
-MongoDB (diagram above needs to be redone). 
+This data will probably directly be to a MongoDB database, which is more adapted 
+to this kind of data. Still, PH2ACF is piloted via MQTT.
+
+*Never used Telegraf*
 
 ## Installation 
 
