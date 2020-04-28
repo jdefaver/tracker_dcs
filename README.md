@@ -4,7 +4,12 @@
 
 The system follows a microservice architecture. Each module in this architecture is deployed as a docker container. 
 
-The whole architecture is described and managed as a docker-compose stack. 
+The whole architecture is described and managed as a docker-compose stack: 
+
+![](doc/architecture.png)
+
+**DISCLAIMER: this package is under active development, and the stack architecture
+is not final.**
 
 Users interact with the architecture through a gateway with two modules: 
 
@@ -13,18 +18,24 @@ Users interact with the architecture through a gateway with two modules:
 
 The connection to these modules is secured with TLS. 
 
-In the stack, modules mostly communicate with the MQTT protocol.  
+In the stack, sensors, devices, and user interfaces mostly communicate with the MQTT protocol, as they
+only need to send and receive simple information, like a power-on instruction, 
+or a temperature reading as a function of time. 
 
-![](doc/architecture.png)
-
+An exception is the PH2ACF interface. A calibration run will generate a large amount of data.
+This data will probably directly be sent to InfluxDB, or maybe another database service like
+MongoDB (diagram above needs to be redone). 
 
 ## Installation 
 
-The architecture is based on Docker, and we use docker images built for X86_64 systems. Therefore, the tracker DCS stack can run on any computer with this architecture. 
+The architecture is deployed with Docker, and we use docker images built for X86_64 systems. 
+Therefore, the tracker DCS stack can run on any computer with this architecture (PC, macs). 
+The software stack is described and supervised by docker-compose. 
 
-The software stack is described and managed by docker-compose. 
+For an introduction to docker, docker-compose, InfluxDB, and Grafana,
+you could check [this blog article](https://thedatafrog.com/en/articles/docker-influxdb-grafana/)
 
-First, clone this repository to your machine, and go inside: 
+To install, first clone this repository to your machine, and go inside: 
 
 ```
 git clone https://github.com/cbernet/tracker_dcs.git
@@ -45,12 +56,16 @@ Then, I suggest to [install docker-compose with pip](https://docs.docker.com/com
 
 ### Windows
 
-Please note the system requirements before attempting the install, docker desktop cannot be installed on all versions of Windows!
+Please note the system requirements before attempting the install, 
+docker desktop cannot be installed on all versions of Windows! You probably need Windows
+64 bit Pro or Education, and to be an administrator of your machine. 
 
 [Install Docker Desktop on Windows](https://docs.docker.com/docker-for-windows/install/)
 
 
 ## Running
+
+To start the stack in production mode: 
 
 ```
 docker-compose up -d 
@@ -61,12 +76,16 @@ docker-compose up -d
 ### Grafana and Node-red web GUIs
 
 * grafana: [http://localhost:3000](http://localhost:3000)
-* nodered: [http://localhost:1880](http://localhost:1880)
+* node-red: [http://localhost:1880](http://localhost:1880)
 
 Passwords : ask Colin
 
 
-## Development mode 
+## Development mode and unit tests
+
+In development mode, there is a port mapping between the host and the services 
+in all containers in the stack. This allows to access all services from the host
+machine for testing purpose, not only grafana and node-red. 
 
 To start the stack in development mode: 
 
@@ -74,7 +93,7 @@ To start the stack in development mode:
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
-To run the test suite: 
+To run the unit test suite: 
 
 ```
 python -m unittest discover test/
