@@ -39,13 +39,13 @@ class DummyHV(object):
 
     def status(self):
         """TODO: Write unittest"""
-        status_channels = {}
+        status_channels = []
         for channel in self.channels:
-            status_channels[channel.number] = {
+            status_channels.append({
                 'number': channel.number,
                 'on': channel.on,
                 'vreq': channel.vreq,
-            }
+            })
         return status_channels
 
 
