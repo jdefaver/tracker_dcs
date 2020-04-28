@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
 from dataclasses import dataclass
-
+import time
 
 @dataclass
 class Channel(object):
@@ -11,13 +11,15 @@ class Channel(object):
 
 class DummyHV(object):
 
-    def __init__(self, nchans=1, name='hv'):
+    def __init__(self, name, nchans=1):
         self.channels = [Channel(i) for i in range(nchans)]
         self.name = name
 
     def command(self, topic, message):
-        commands = ['switch', 'setv', 'status']
-        device, channel, command = topic.split('/')[1:]
+        device, cmd, command, channel = topic.split('/')[1:]
+        if cmd != 'cmd':
+            raise ValueError('command messages should be of the form /device/cmd/#')
+        commands = ['switch', 'setv']
         if device != self.name:
             raise ValueError('wrong hv! ', device, self.name)
         channel = int(channel)
@@ -29,9 +31,8 @@ class DummyHV(object):
             else:
                 raise ValueError('can only switch on or off')
         elif command == 'setv':
+            print('setting vreq', channel, message)
             self.channels[channel].vreq = float(message)
-        elif command == 'status':
-            return getattr(self.channels[channel], message)
         else:
             raise ValueError('only possible commands are', commands)
 
@@ -39,20 +40,32 @@ class DummyHV(object):
 def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe('/hv/#')
+    client.subscribe('/{}/cmd/#'.format(client.device.name))
 
 
 def on_message(client, userdata, msg):
-    print(msg.topic, msg.payload)
+    print('recv', msg.topic, msg.payload)
+    client.device.command(msg.topic, msg.payload)
 
 
-def connect(hv):
+def run(device):
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
+    client.device = device
     client.connect("localhost", 1883, 60)
-    client.loop_forever()
+    client.loop_start()
+    while 1:
+        client.publish('/{}/status/0'.format(device.name),
+                       device.channels[0].vreq)
+        time.sleep(0.5)
+    time.sleep(1)
+    client.disconnect()
+    client.loop_stop()
 
 
 if __name__ == '__main__':
-    run()
+    import sys
+    device_name = sys.argv[1]
+    device = DummyHV(device_name)
+    run(device)

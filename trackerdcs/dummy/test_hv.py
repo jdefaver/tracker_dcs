@@ -5,11 +5,11 @@ from .hv import DummyHV
 class TestDummyHV(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.hv = DummyHV()
+        self.hv = DummyHV('hv')
 
     def test_1(self):
         nchans = 4
-        hv = DummyHV(nchans)
+        hv = DummyHV('hv', nchans)
         self.assertTrue(len(hv.channels), nchans)
         self.assertListEqual([chan.number for chan in hv.channels],
                              list(range(nchans)))
@@ -17,21 +17,18 @@ class TestDummyHV(unittest.TestCase):
 
     def test_command(self):
         with self.assertRaises(ValueError) as err:
-            self.hv.command('/hv2/0/switch', 'on')
+            self.hv.command('/hv2/cmd/switch/0', 'on')
         with self.assertRaises(ValueError) as err:
-            self.hv.command('/hv/0/getlost', 'on')
+            self.hv.command('/hv/cmd/getlost/0', 'on')
         with self.assertRaises(IndexError) as err:
-            self.hv.command('/hv/1/switch', 'on')
-        self.assertFalse(self.hv.command('/hv/0/status', 'on'))
-        self.hv.command('/hv/0/switch', 'on')
+            self.hv.command('/hv/cmd/switch/1', 'on')
+        self.hv.command('/hv/cmd/switch/0', 'on')
         self.assertTrue(self.hv.channels[0].on)
-        self.assertTrue(self.hv.command('/hv/0/status', 'on'))
-        self.hv.command('/hv/0/switch', 'off')
+        self.hv.command('/hv/cmd/switch/0', 'off')
         self.assertFalse(self.hv.channels[0].on)
         voltage = 100
-        self.hv.command('/hv/0/setv', voltage)
+        self.hv.command('/hv/cmd/setv/0', voltage)
         self.assertEqual(self.hv.channels[0].vreq, voltage)
-        self.assertEqual(self.hv.command('/hv/0/status', 'vreq'), voltage)
         with self.assertRaises(ValueError) as err:
-            self.hv.command('/hv/0/setv', 'blah')
+            self.hv.command('/hv/cmd/setv/0', 'blah')
 
