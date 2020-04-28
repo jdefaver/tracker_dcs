@@ -39,14 +39,14 @@ class DummyHV(object):
 def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe("/hv/#")
+    client.subscribe('/hv/#')
 
 
 def on_message(client, userdata, msg):
     print(msg.topic, msg.payload)
 
 
-def run():
+def connect(hv):
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
