@@ -4,7 +4,13 @@ services:
     build: ./trackerdcs
     links:
       - mosquitto
-    command: ['python', 'dummy/hv.py']
+    command: ['python', 'dummy/hv.py', 'hv', 'mosquitto']
+  lv:
+    build: ./trackerdcs
+    links:
+      - mosquitto
+    command: ['python', 'dummy/hv.py', 'lv', 'mosquitto']
+
 
 
 

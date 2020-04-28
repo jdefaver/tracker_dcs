@@ -48,12 +48,12 @@ def on_message(client, userdata, msg):
     client.device.command(msg.topic, msg.payload)
 
 
-def run(device):
+def run(device, mqtt_host):
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
     client.device = device
-    client.connect("localhost", 1883, 60)
+    client.connect(mqtt_host, 1883, 60)
     client.loop_start()
     while 1:
         client.publish('/{}/status/0'.format(device.name),
@@ -66,6 +66,6 @@ def run(device):
 
 if __name__ == '__main__':
     import sys
-    device_name = sys.argv[1]
+    device_name, mqtt_host = sys.argv[1:]
     device = DummyHV(device_name)
-    run(device)
+    run(device, mqtt_host)

@@ -9,4 +9,4 @@ COPY . .
 COPY dummy/ .
 RUN ls dummy
 
-CMD [ "python", "dummy/hv.py"]
+CMD [ "python", "dummy/hv.py", "hv", "mosquitto"]
