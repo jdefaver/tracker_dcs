@@ -6,6 +6,10 @@ services:
       - "8086"
     volumes:
       - influxdb:/var/lib/influxdb
+  telegraf:
+    image: telegraf
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
   dashboard:
     image: grafana/grafana
     expose:
@@ -34,9 +38,11 @@ services:
 
 volumes:
   influxdb:
+  telegraf.conf:
   grafana:
   nodered:
   mosquitto_data:
   mosquitto_log:
   mosquitto.conf:
+
   

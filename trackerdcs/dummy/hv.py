@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from dataclasses import dataclass
 import time
+import json
 
 @dataclass
 class Channel(object):
@@ -36,6 +37,17 @@ class DummyHV(object):
         else:
             raise ValueError('only possible commands are', commands)
 
+    def status(self):
+        """TODO: Write unittest"""
+        status_channels = {}
+        for channel in self.channels:
+            status_channels[channel.number] = {
+                'number': channel.number,
+                'on': channel.on,
+                'vreq': channel.vreq,
+            }
+        return status_channels
+
 
 def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
@@ -56,9 +68,11 @@ def run(device, mqtt_host):
     client.connect(mqtt_host, 1883, 60)
     client.loop_start()
     while 1:
-        client.publish('/{}/status/0'.format(device.name),
-                       device.channels[0].vreq)
-        time.sleep(0.5)
+        client.publish(
+            '/{}/status'.format(device.name),
+            json.dumps(device.status())
+        )
+        time.sleep(1)
     time.sleep(1)
     client.disconnect()
     client.loop_stop()

@@ -32,3 +32,8 @@ class TestDummyHV(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             self.hv.command('/hv/cmd/setv/0', 'blah')
 
+    def test_status(self):
+        self.assertDictEqual(self.hv.status(),
+                             {0:{'number': 0,
+                                 'on': False,
+                                 'vreq': 0.}})

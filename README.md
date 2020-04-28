@@ -24,7 +24,10 @@ or a temperature reading as a function of time.
 
 An exception is the PH2ACF interface. A calibration run will generate a large amount of data.
 This data will probably directly be to a MongoDB database, which is more adapted 
-to this kind of data. Still, PH2ACF is piloted via MQTT.
+to this kind of data. Still, PH2ACF is piloted via MQTT. 
+
+The two databases, InfluxDB and MongoDB, are synchronized via a timestamp 
+attached to the data. 
 
 *Never used Telegraf*
 
