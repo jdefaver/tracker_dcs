@@ -10,7 +10,11 @@ services:
     links:
       - mosquitto
     command: ['python', 'dummy/hv.py', 'lv', 'mosquitto']
-
+  sensor_1:
+    build: ./trackerdcs
+    links:
+      - mosquitto
+    command: ['python', 'dummy/sensor.py', 'sensor_1', 'mosquitto']
 
 
 

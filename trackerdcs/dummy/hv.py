@@ -43,7 +43,7 @@ class DummyHV(object):
         for channel in self.channels:
             status_channels.append({
                 'number': channel.number,
-                'on': channel.on,
+                'on': int(channel.on), # issue with bools in telegraf/influxdb
                 'vreq': channel.vreq,
             })
         return status_channels
