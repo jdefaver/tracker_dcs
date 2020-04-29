@@ -2,7 +2,8 @@
 
 ## Overall Architecture
 
-The system follows a microservice architecture. Each module in this architecture is deployed as a docker container. 
+The system follows a microservice architecture. 
+Each module in this architecture is deployed as a docker container. 
 
 The whole architecture is described and managed as a docker-compose stack: 
 
@@ -103,6 +104,32 @@ To run the unit test suite:
 ```
 python -m unittest discover trackerdcs/
 ```
+
+Please make sure all tests pass before sending a PR to this repository.
+
+## Demonstrator 
+
+The demonstrator features: 
+
+* controllable, dummy high-voltage and low-voltage modules
+* a dummy sensor producing two measurements
+
+To start the demonstrator, do 
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.dummy.yml up -d
+```
+
+Then access: 
+
+* the grafana dashboard: [http://localhost:3000](http://localhost:3000)
+* the node-red user interface: [http://localhost:1880](http://localhost:1880/ui)
+
+You should be able to control the HV module, and to see the results in grafana: 
+
+![](doc/simple_ui.png)
+
+
 
 ## TODO
 
