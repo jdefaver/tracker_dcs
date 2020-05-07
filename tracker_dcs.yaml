@@ -7,7 +7,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: "2020-05-07T14:03:26Z"
+  creationTimestamp: "2020-05-07T15:44:05Z"
   labels:
     app: trackerdcs
   name: trackerdcs
@@ -60,6 +60,39 @@ spec:
     - mountPath: /mosquitto/config/mosquitto.conf
       name: home-delaere-scratch-sandbox-tracker_dcs-mosquitto-mosquitto.conf
     workingDir: /
+  - env:
+    - name: PATH
+      value: /usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    - name: TERM
+      value: xterm
+    - name: container
+      value: podman
+    - name: GF_PATHS_CONFIG
+      value: /etc/grafana/grafana.ini
+    - name: GF_PATHS_DATA
+      value: /var/lib/grafana
+    - name: GF_PATHS_PROVISIONING
+      value: /etc/grafana/provisioning
+    - name: GF_PATHS_PLUGINS
+      value: /var/lib/grafana/plugins
+    - name: GF_PATHS_HOME
+      value: /usr/share/grafana
+    - name: GF_PATHS_LOGS
+      value: /var/log/grafana
+    - name: HOSTNAME
+      value: tracker_dcs
+    image: docker.io/grafana/grafana:latest
+    name: boringwilson
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsGroup: 472
+      runAsUser: 472
+      seLinuxOptions: {}
+    workingDir: /usr/share/grafana
   - command:
     - telegraf
     env:
