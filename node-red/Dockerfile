@@ -4,8 +4,15 @@ FROM nodered/node-red
 # of your added modules for Node-RED
 RUN npm install --only=production \
   node-red-dashboard \ 
-  node-red-node-pushbullet
-  
+  node-red-node-pushbullet \
+  node-red-contrib-fsm \
+  node-red-contrib-hal \
+  node-red-contrib-counter \
+  node-red-contrib-increment \
+  node-red-contrib-simple-gate \
+  node-red-contrib-state \
+  node-red-contrib-ui-led
+
 # Copy _your_ Node-RED project files into place
 # COPY settings.js /data/settings.js
 # COPY flows_cred.json /data/flows_cred.json
