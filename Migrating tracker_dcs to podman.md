@@ -25,4 +25,17 @@ Note also that for it to work with SELinux on Fedora, we have to do
 
 Finally, we create the yaml file:
 >podman generate kube tracker_dcs > tracker_dcs.yaml
->
+
+The unit test works.
+Then, I want to run the demo. For that I first build the trackerdcs image:
+>podman build -t localhost/trackerdcs .
+
+Then I run them in the pod.
+
+>podman run --pod tracker_dcs -d localhost/trackerdcs python dummy/hv.py hv localhost
+>podman run --pod tracker_dcs -d localhost/trackerdcs python dummy/hv.py lv localhost
+>podman run --pod tracker_dcs -d localhost/trackerdcs python dummy/sensor.py sensor_1 localhost
+
+Note that compared with the docker-compose approach we connect to localhost since we run in the same pod.
+
+So far data doesnt go through, but I think that this is not a podman issue, more sth with MQTT.
