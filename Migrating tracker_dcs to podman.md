@@ -38,4 +38,5 @@ Then I run them in the pod.
 
 Note that compared with the docker-compose approach we connect to localhost since we run in the same pod.
 
-So far data doesnt go through, but I think that this is not a podman issue, more sth with MQTT.
+Same for the telegraf config: put localhost everywhere.
+
