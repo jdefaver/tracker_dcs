@@ -25,9 +25,9 @@ class DummyHV(object):
             raise ValueError('wrong hv! ', device, self.name)
         channel = int(channel)
         if command == 'switch':
-            if message == 'on':
+            if message == b'on':
                 self.channels[channel].on = True
-            elif message == 'off':
+            elif message == b'off':
                 self.channels[channel].on = False
             else:
                 raise ValueError('can only switch on or off')
