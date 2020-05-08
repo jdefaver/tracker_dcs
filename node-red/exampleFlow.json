@@ -1,0 +1,544 @@
+[
+    {
+        "id": "1b5e05d0.356c1a",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "82bebf6b.1bb49",
+        "type": "mqtt out",
+        "z": "1b5e05d0.356c1a",
+        "name": "switch HV",
+        "topic": "/hv/cmd/switch/0",
+        "qos": "",
+        "retain": "",
+        "broker": "26584c7e.c410f4",
+        "x": 460,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "edaf15b7.e93438",
+        "type": "inject",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "topic": "",
+        "payload": "on",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110,
+        "y": 340,
+        "wires": [
+            [
+                "16f4f7ff.3c89d8"
+            ]
+        ]
+    },
+    {
+        "id": "af95bf21.8532f",
+        "type": "inject",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "topic": "",
+        "payload": "off",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110,
+        "y": 380,
+        "wires": [
+            [
+                "16f4f7ff.3c89d8"
+            ]
+        ]
+    },
+    {
+        "id": "d459195d.5c5308",
+        "type": "mqtt out",
+        "z": "1b5e05d0.356c1a",
+        "name": "HV SETV",
+        "topic": "/hv/cmd/setv/0",
+        "qos": "",
+        "retain": "",
+        "broker": "26584c7e.c410f4",
+        "x": 460,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "5e033e49.1207a",
+        "type": "inject",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "topic": "",
+        "payload": "100",
+        "payloadType": "num",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110,
+        "y": 180,
+        "wires": [
+            [
+                "ec9917f.eee1fe8"
+            ]
+        ]
+    },
+    {
+        "id": "9656635.a76daa",
+        "type": "inject",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "topic": "",
+        "payload": "50",
+        "payloadType": "num",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110,
+        "y": 220,
+        "wires": [
+            [
+                "ec9917f.eee1fe8"
+            ]
+        ]
+    },
+    {
+        "id": "2c40910c.ba466e",
+        "type": "inject",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 110,
+        "y": 260,
+        "wires": [
+            [
+                "ec9917f.eee1fe8"
+            ]
+        ]
+    },
+    {
+        "id": "1aa94594.1f356a",
+        "type": "ui_led",
+        "z": "1b5e05d0.356c1a",
+        "group": "e831694e.1a4d98",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "HV status",
+        "labelPlacement": "left",
+        "labelAlignment": "left",
+        "colorForValue": [
+            {
+                "color": "red",
+                "value": "0",
+                "valueType": "num"
+            },
+            {
+                "color": "green",
+                "value": "1",
+                "valueType": "num"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "name": "",
+        "x": 630,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "16f4f7ff.3c89d8",
+        "type": "ui_switch",
+        "z": "1b5e05d0.356c1a",
+        "name": "HV switch",
+        "label": "HV enable",
+        "tooltip": "",
+        "group": "e831694e.1a4d98",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "",
+        "style": "",
+        "onvalue": "on",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "off",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "x": 280,
+        "y": 360,
+        "wires": [
+            [
+                "82bebf6b.1bb49"
+            ]
+        ]
+    },
+    {
+        "id": "dfc1869e.1408a8",
+        "type": "mqtt in",
+        "z": "1b5e05d0.356c1a",
+        "name": "HV status",
+        "topic": "/hv/status",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "26584c7e.c410f4",
+        "x": 100,
+        "y": 80,
+        "wires": [
+            [
+                "f2e30a52.5a7ec8"
+            ]
+        ]
+    },
+    {
+        "id": "ec9917f.eee1fe8",
+        "type": "ui_slider",
+        "z": "1b5e05d0.356c1a",
+        "name": "Vset",
+        "label": "Voltage",
+        "tooltip": "",
+        "group": "e831694e.1a4d98",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "end",
+        "topic": "",
+        "min": 0,
+        "max": "500",
+        "step": 1,
+        "x": 290,
+        "y": 220,
+        "wires": [
+            [
+                "d459195d.5c5308"
+            ]
+        ]
+    },
+    {
+        "id": "12054296.b7a34d",
+        "type": "ui_gauge",
+        "z": "1b5e05d0.356c1a",
+        "name": "HV voltage",
+        "group": "e831694e.1a4d98",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "gauge",
+        "label": "V",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "500",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "150",
+        "seg2": "300",
+        "x": 650,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "f2e30a52.5a7ec8",
+        "type": "json",
+        "z": "1b5e05d0.356c1a",
+        "name": "decode status",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 260,
+        "y": 80,
+        "wires": [
+            [
+                "a2c6b30b.9da66",
+                "b5eb05b6.727098"
+            ]
+        ]
+    },
+    {
+        "id": "a2c6b30b.9da66",
+        "type": "change",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload[0].on",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 460,
+        "y": 140,
+        "wires": [
+            [
+                "1aa94594.1f356a"
+            ]
+        ]
+    },
+    {
+        "id": "b5eb05b6.727098",
+        "type": "change",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload[0].vreq",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 460,
+        "y": 80,
+        "wires": [
+            [
+                "12054296.b7a34d"
+            ]
+        ]
+    },
+    {
+        "id": "a7b5fa0a.701a98",
+        "type": "mqtt in",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "topic": "/sensor_1/#",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "26584c7e.c410f4",
+        "x": 120,
+        "y": 480,
+        "wires": [
+            [
+                "a9feac90.baac2"
+            ]
+        ]
+    },
+    {
+        "id": "87d7e9b9.97aa98",
+        "type": "ui_gauge",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "group": "dbd2c210.cc1ae",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "wave",
+        "title": "Measurement 2",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1.1",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 720,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "39d75c68.300ae4",
+        "type": "ui_chart",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "group": "dbd2c210.cc1ae",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Measurement 1",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "useOldStyle": false,
+        "outputs": 1,
+        "x": 720,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a9feac90.baac2",
+        "type": "json",
+        "z": "1b5e05d0.356c1a",
+        "name": "decode sensor",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 320,
+        "y": 480,
+        "wires": [
+            [
+                "be91560e.9301a8",
+                "4bff750f.013a7c"
+            ]
+        ]
+    },
+    {
+        "id": "be91560e.9301a8",
+        "type": "change",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.meas1",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 520,
+        "y": 480,
+        "wires": [
+            [
+                "39d75c68.300ae4"
+            ]
+        ]
+    },
+    {
+        "id": "4bff750f.013a7c",
+        "type": "change",
+        "z": "1b5e05d0.356c1a",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.meas2",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 520,
+        "y": 540,
+        "wires": [
+            [
+                "87d7e9b9.97aa98"
+            ]
+        ]
+    },
+    {
+        "id": "26584c7e.c410f4",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "tracker_dcs_mqtt",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "e831694e.1a4d98",
+        "type": "ui_group",
+        "z": "",
+        "name": "HV Power supply",
+        "tab": "f25576dc.e747f8",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "dbd2c210.cc1ae",
+        "type": "ui_group",
+        "z": "",
+        "name": "Sensors",
+        "tab": "f25576dc.e747f8",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "f25576dc.e747f8",
+        "type": "ui_tab",
+        "z": "",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
