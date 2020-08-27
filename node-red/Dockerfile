@@ -12,11 +12,13 @@ RUN npm install --only=production \
   node-red-contrib-simple-gate \
   node-red-contrib-state \
   node-red-contrib-ui-led
-
+  #epics \
+  #node-red-contrib-epics
+  
 # Copy _your_ Node-RED project files into place
-# COPY settings.js /data/settings.js
-# COPY flows_cred.json /data/flows_cred.json
-# COPY flows.json /data/flows.json
+#COPY settings.js /data/settings.js
+#COPY flows_cred.json /data/flows_cred.json
+#COPY flows.json /data/flows.json
 
 # Start the container normally
 CMD ["npm", "start"]
