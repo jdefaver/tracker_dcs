@@ -3,39 +3,40 @@
 # Save the output of this file and use kubectl create -f to import
 # it into Kubernetes.
 #
-# Created with podman-1.9.0
+# Created with podman-2.0.4
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: "2020-05-07T15:44:05Z"
+  creationTimestamp: "2020-08-27T15:04:02Z"
   labels:
     app: trackerdcs
   name: trackerdcs
 spec:
   containers:
   - command:
-    - /usr/sbin/mosquitto
-    - -c
-    - /mosquitto/config/mosquitto.conf
+    - npm
+    - start
     env:
     - name: PATH
       value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     - name: TERM
       value: xterm
-    - name: DOWNLOAD_SHA256
-      value: 412979b2db0a0020bd02fa64f0a0de9e7000b84462586e32b67f29bb1f6c1685
-    - name: GPG_KEYS
-      value: A0D6EEA1DCAE49A635A3B2F0779B22DFB3E717B7
-    - name: LWS_VERSION
-      value: 2.4.2
     - name: container
       value: podman
-    - name: VERSION
-      value: 1.6.9
+    - name: NODE_RED_VERSION
+      value: v1.1.3
+    - name: NODE_PATH
+      value: /usr/src/node-red/node_modules:/data/node_modules
+    - name: FLOWS
+      value: flows.json
+    - name: NODE_VERSION
+      value: 10.22.0
+    - name: YARN_VERSION
+      value: 1.22.4
     - name: HOSTNAME
       value: tracker_dcs
-    image: docker.io/library/eclipse-mosquitto:latest
-    name: magicalkowalevski
+    image: localhost/node-red:latest
+    name: tdcsnode-red
     ports:
     - containerPort: 8086
       hostPort: 8086
@@ -55,44 +56,47 @@ spec:
       capabilities: {}
       privileged: false
       readOnlyRootFilesystem: false
+      runAsGroup: 1000
+      runAsUser: 1000
       seLinuxOptions: {}
     volumeMounts:
-    - mountPath: /mosquitto/config/mosquitto.conf
-      name: home-delaere-scratch-sandbox-tracker_dcs-mosquitto-mosquitto.conf
-    workingDir: /
-  - env:
+    - mountPath: /data
+      name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-node-red-data
+    workingDir: /usr/src/node-red
+  - command:
+    - /usr/sbin/mosquitto
+    - -c
+    - /mosquitto/config/mosquitto.conf
+    env:
     - name: PATH
-      value: /usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     - name: TERM
       value: xterm
     - name: container
       value: podman
-    - name: GF_PATHS_CONFIG
-      value: /etc/grafana/grafana.ini
-    - name: GF_PATHS_DATA
-      value: /var/lib/grafana
-    - name: GF_PATHS_PROVISIONING
-      value: /etc/grafana/provisioning
-    - name: GF_PATHS_PLUGINS
-      value: /var/lib/grafana/plugins
-    - name: GF_PATHS_HOME
-      value: /usr/share/grafana
-    - name: GF_PATHS_LOGS
-      value: /var/log/grafana
+    - name: VERSION
+      value: 1.6.12
+    - name: DOWNLOAD_SHA256
+      value: 548d73d19fb787dd0530334e398fd256ef3a581181678488a741a995c4f007fb
+    - name: GPG_KEYS
+      value: A0D6EEA1DCAE49A635A3B2F0779B22DFB3E717B7
+    - name: LWS_VERSION
+      value: 2.4.2
     - name: HOSTNAME
       value: tracker_dcs
-    image: docker.io/grafana/grafana:latest
-    name: boringwilson
+    image: docker.io/library/eclipse-mosquitto:latest
+    name: tdcsmosquitto
     resources: {}
     securityContext:
       allowPrivilegeEscalation: true
       capabilities: {}
       privileged: false
       readOnlyRootFilesystem: false
-      runAsGroup: 472
-      runAsUser: 472
       seLinuxOptions: {}
-    workingDir: /usr/share/grafana
+    volumeMounts:
+    - mountPath: /mosquitto/config/mosquitto.conf
+      name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-mosquitto-mosquitto.conf
+    workingDir: /
   - command:
     - telegraf
     env:
@@ -103,11 +107,11 @@ spec:
     - name: container
       value: podman
     - name: TELEGRAF_VERSION
-      value: 1.14.2
+      value: 1.15.2
     - name: HOSTNAME
       value: tracker_dcs
     image: docker.io/library/telegraf:latest
-    name: zentharp
+    name: telegraf
     resources: {}
     securityContext:
       allowPrivilegeEscalation: true
@@ -117,43 +121,89 @@ spec:
       seLinuxOptions: {}
     volumeMounts:
     - mountPath: /etc/telegraf/telegraf.conf
-      name: home-delaere-scratch-sandbox-tracker_dcs-telegraf.conf
+      name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-telegraf.conf
       readOnly: true
     workingDir: /
-  - command:
-    - npm
-    - start
-    env:
+  - env:
     - name: PATH
-      value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      value: /usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     - name: TERM
       value: xterm
-    - name: NODE_VERSION
-      value: 10.19.0
-    - name: YARN_VERSION
-      value: 1.21.1
-    - name: NODE_RED_VERSION
-      value: v1.0.4
-    - name: NODE_PATH
-      value: /usr/src/node-red/node_modules:/data/node_modules
-    - name: FLOWS
-      value: flows.json
     - name: container
       value: podman
+    - name: GF_PATHS_DATA
+      value: /var/lib/grafana
+    - name: GF_PATHS_HOME
+      value: /usr/share/grafana
+    - name: GF_PATHS_LOGS
+      value: /var/log/grafana
+    - name: GF_PATHS_PLUGINS
+      value: /var/lib/grafana/plugins
+    - name: GF_PATHS_PROVISIONING
+      value: /etc/grafana/provisioning
+    - name: GF_PATHS_CONFIG
+      value: /etc/grafana/grafana.ini
     - name: HOSTNAME
       value: tracker_dcs
-    image: localhost/node-red:latest
-    name: agitatedchaplygin
+    image: docker.io/grafana/grafana:latest
+    name: tdcsgrafana
     resources: {}
     securityContext:
       allowPrivilegeEscalation: true
       capabilities: {}
       privileged: false
       readOnlyRootFilesystem: false
-      runAsGroup: 1000
+      runAsGroup: 0
       runAsUser: 1000
       seLinuxOptions: {}
-    workingDir: /usr/src/node-red
+    volumeMounts:
+    - mountPath: /var/lib/grafana
+      name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-grafana
+    workingDir: /usr/share/grafana
+  - command:
+    - python
+    - -u
+    - hv.py
+    - hv
+    - localhost
+    env:
+    - name: PATH
+      value: /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    - name: TERM
+      value: xterm
+    - name: container
+      value: podman
+    - name: EPICS_CA_NAME_SERVERS
+      value: 130.104.48.188
+    - name: PYTHON_VERSION
+      value: 3.8.5
+    - name: PYTHON_PIP_VERSION
+      value: 20.2.2
+    - name: LANG
+      value: C.UTF-8
+    - name: GPG_KEY
+      value: E3FF2839C048B25C084DEBE9B26995E310250568
+    - name: EPICS_CA_AUTO_ADDR_LIST
+      value: "NO"
+    - name: PYTHON_GET_PIP_URL
+      value: https://github.com/pypa/get-pip/raw/5578af97f8b2b466f4cdbebe18a3ba2d48ad1434/get-pip.py
+    - name: PYTHON_GET_PIP_SHA256
+      value: d4d62a0850fe0c2e6325b2cc20d818c580563de5a2038f917e3cb0e25280b4d1
+    - name: HOSTNAME
+      value: tracker_dcs
+    image: localhost/pyepics:latest
+    name: gallantnoether
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      seLinuxOptions: {}
+    volumeMounts:
+    - mountPath: /usr/src/app/hv.py
+      name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-mqtt-epics-hv.py
+    workingDir: /usr/src/app
   - command:
     - influxd
     env:
@@ -161,14 +211,14 @@ spec:
       value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     - name: TERM
       value: xterm
-    - name: INFLUXDB_VERSION
-      value: 1.8.0
     - name: container
       value: podman
+    - name: INFLUXDB_VERSION
+      value: 1.8.1
     - name: HOSTNAME
       value: tracker_dcs
     image: docker.io/library/influxdb:latest
-    name: giftedyonath
+    name: tdcsinflux
     resources: {}
     securityContext:
       allowPrivilegeEscalation: true
@@ -176,15 +226,40 @@ spec:
       privileged: false
       readOnlyRootFilesystem: false
       seLinuxOptions: {}
+    volumeMounts:
+    - mountPath: /var/lib/influxdb
+      name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-influxdb
     workingDir: /
   volumes:
   - hostPath:
-      path: /home/delaere/scratch/sandbox/tracker_dcs/mosquitto/mosquitto.conf
-      type: File
-    name: home-delaere-scratch-sandbox-tracker_dcs-mosquitto-mosquitto.conf
+      path: /home/swertz/Documents/Recherche/CMS/Tracker_P2/tracker_dcs/node-red/data
+      type: Directory
+    name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-node-red-data
   - hostPath:
-      path: /home/delaere/scratch/sandbox/tracker_dcs/telegraf.conf
+      path: /home/swertz/Documents/Recherche/CMS/Tracker_P2/tracker_dcs/mosquitto/mosquitto.conf
       type: File
-    name: home-delaere-scratch-sandbox-tracker_dcs-telegraf.conf
+    name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-mosquitto-mosquitto.conf
+  - hostPath:
+      path: /home/swertz/Documents/Recherche/CMS/Tracker_P2/tracker_dcs/telegraf.conf
+      type: File
+    name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-telegraf.conf
+  - hostPath:
+      path: /home/swertz/Documents/Recherche/CMS/Tracker_P2/tracker_dcs/grafana
+      type: Directory
+    name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-grafana
+  - hostPath:
+      path: /home/swertz/Documents/Recherche/CMS/Tracker_P2/tracker_dcs/mqtt-epics/hv.py
+      type: File
+    name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-mqtt-epics-hv.py
+  - hostPath:
+      path: /home/swertz/Documents/Recherche/CMS/Tracker_P2/tracker_dcs/influxdb
+      type: Directory
+    name: home-swertz-Documents-Recherche-CMS-Tracker_P2-tracker_dcs-influxdb
 status: {}
+---
+metadata:
+  creationTimestamp: null
+spec: {}
+status:
+  loadBalancer: {}
 

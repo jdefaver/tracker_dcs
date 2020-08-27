@@ -7,17 +7,41 @@ First, we create a pod:
 
 Ports are shared for influxdb (8086), grafana (3000), nodered (1880), and mosquito (1883). The last one might be dropped, but for now it will allow to monitor the MQTT traffic.
 
-Then, create the containers:
+First build the required image (later could put them on a registry):
 
-> podman run --pod tracker_dcs -d -v influxdb:/var/lib/influxdb influxdb
-> podman run --pod tracker_dcs -d -v ./telegraf.conf:/etc/telegraf/telegraf.conf:ro telegraf
-> podman run --pod tracker_dcs -d -v nodered_tk:/data localhost/node-red
-> podman run --pod tracker_dcs -d -v mosquitto_data:/mosquitto/data -v mosquitto_log:/mosquitto/log -v ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
-> podman run --pod tracker_dcs -d -v grafana_tk:/var/lib/grafana grafana/grafana
+```
+podman build -t localhost/node-red ./node-red
+podman build -t localhost/pyepics ./mqtt-epics
+```
 
- 
-For nodered, we build it to have plugins preinstalled. Could also be evolved to contain the default dashboard, etc.
-> podman build -t localhost/node-red . 
+Then run the DB:
+```
+podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_influx -v ./influxdb:/var/lib/influxdb influxdb
+```
+If it's the first time, might need to create a test DB:
+```
+$ podman exec -it tdcs_influx influx
+> create database testdb
+```
+
+Then, run the containers:
+
+```
+podman run --pod tracker_dcs -d --init --name telegraf -v ./telegraf.conf:/etc/telegraf/telegraf.conf:ro telegraf
+podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_mosquitto -v mosquitto_data:/mosquitto/data -v mosquitto_log:/mosquitto/log -v ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
+podman run --pod tracker_dcs -d --init --userns=keep-id -u $(id -u) --name tdcs_grafana -v ./grafana:/var/lib/grafana grafana/grafana
+podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_node-red -v ./node-red/data:/data localhost/node-red
+```
+
+We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it runs with a different user) to be able to write to the bind volumes.
+
+We can then run the HV:
+```
+podman run --pod tracker_dcs -d --init -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./mqtt-epics/hv.py:/usr/src/app/hv.py localhost/pyepics python -u hv.py hv localhost
+```
+
+
+## From Christophe
 
 Note also that for it to work with SELinux on Fedora, we have to do
 > chcon -t svirt_sandbox_file_t telegraf.conf
