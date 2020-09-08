@@ -3,7 +3,9 @@ Migrating tracker_dcs to podman
 
 First, we create a pod:
 
-> podman pod create --name tracker_dcs -p 8086 -p 3000 -p 1880 -p 1883
+```
+podman pod create --name tracker_dcs -p 8086 -p 3000 -p 1880 -p 1883
+```
 
 Ports are shared for influxdb (8086), grafana (3000), nodered (1880), and mosquito (1883). The last one might be dropped, but for now it will allow to monitor the MQTT traffic.
 
@@ -12,6 +14,11 @@ First build the required image (later could put them on a registry):
 ```
 podman build -t localhost/node-red ./node-red
 podman build -t localhost/pyepics ./mqtt-epics
+```
+
+Creat the directories which will be bind-mounted:
+```
+mkdir influxdb grafana
 ```
 
 Then run the DB:
@@ -35,10 +42,20 @@ podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_node-red -v 
 
 We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it runs with a different user) to be able to write to the bind volumes.
 
+CC7 note: it seems the containers should run as root with `-u 0:0` and no `--userns`; also `--init` is not supported there.
+
 We can then run the HV:
 ```
 podman run --pod tracker_dcs -d --init -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./mqtt-epics/hv.py:/usr/src/app/hv.py localhost/pyepics python -u hv.py hv localhost
 ```
+
+When running in the UCL network EPICS can also work with `-e EPICS_CA_AUTO_ADDR_LIST=130.104.48.188` instead of the above.
+
+To connect from outside the UCL network (with the pod running on the DAQ PC), run in three separate terminals:
+- `sshuttle -r server02.fynu.ucl.ac.be 130.104.48.0/24`
+- `ssh -L 1880:localhost:1880 130.104.48.63`
+- `ssh -L 3000:localhost:3000 130.104.48.63`
+You can then point your browser to `localhost:1880` or `localhost:3000`.
 
 
 ## From Christophe
