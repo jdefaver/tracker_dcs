@@ -55,6 +55,10 @@ class EPICSChannel(object):
             self.PVs[var] = DeadbandPV(self.prefix + var, dead_band=0.01, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
             time.sleep(0.1)
 
+    def reconnect(self):
+        for pv in self.PVs.values():
+            pv.reconnect()
+
     def switch_on(self):
         self.PVs["Pw"].put("On")
     def switch_off(self):
@@ -167,12 +171,14 @@ class EPICSHVChannel(EPICSChannel):
 
 
 class PSStates(enum.Enum):
+    INIT = -1
     DISCONNECTED = 0
     CONNECTED = 1
     LV_OFF = 2
     LV_ON = 3
     HV_RAMP = 4
     HV_ON = 5
+    ERROR = 6
 
 class TrackerChannel(object):
 
@@ -180,11 +186,12 @@ class TrackerChannel(object):
         log.debug("\n\n\n == Creating tracker channel == \n\n\n")
 
         transitions = [
-            { 'trigger': 'connect_epics', 'source': PSStates.DISCONNECTED, 'dest': PSStates.CONNECTED, 'before': 'epics_init' },
-            { 'trigger': 'disconnect_epics', 'source': '*', 'dest': PSStates.DISCONNECTED },
+            { 'trigger': 'fsm_connect_epics', 'source': PSStates.INIT, 'dest': PSStates.CONNECTED, 'before': '_connect_epics' },
+            { 'trigger': 'fsm_reconnect_epics', 'source': PSStates.DISCONNECTED, 'dest': PSStates.CONNECTED, 'before': '_reconnect_epics' },
+            { 'trigger': 'fsm_disconnect_epics', 'source': '*', 'dest': PSStates.DISCONNECTED },
         ]
 
-        self.machine = Machine(model=self, states=PSStates, transitions=transitions, initial=PSStates.DISCONNECTED)
+        self.machine = Machine(model=self, states=PSStates, transitions=transitions, initial=PSStates.INIT)
 
         self.machine.on_enter_LV_ON('print_fsm')
         self.machine.on_enter_LV_OFF('print_fsm')
@@ -192,6 +199,8 @@ class TrackerChannel(object):
         self.machine.on_enter_HV_RAMP('print_fsm')
         self.machine.on_enter_CONNECTED('print_fsm')
         self.machine.on_enter_DISCONNECTED('print_fsm')
+        self.machine.on_enter_INIT('print_fsm')
+        self.machine.on_enter_ERROR('print_fsm')
         # update our state depending on the actual CAEN state as soon as we connect
         self.machine.on_enter_CONNECTED('epics_update_status')
 
@@ -205,21 +214,29 @@ class TrackerChannel(object):
     def print_fsm(self):
         log.debug(f"FSM state: {self.state}")
 
-    def epics_init(self):
+    def _connect_epics(self):
         self.epics_LV = EPICSLVChannel(self.lv_board, self.lv_chan, self.epics_connection_callback, self.epics_update_callback)
         self.epics_HV = EPICSHVChannel(self.hv_board, self.hv_chan, self.epics_connection_callback, self.epics_update_callback)
 
-        self.machine.add_transition('lv_on', PSStates.LV_OFF, None, before=self.epics_LV.switch_on)
-        self.machine.add_transition('lv_off', PSStates.LV_ON, None, before=self.epics_LV.switch_off)
-        self.machine.add_transition('hv_on', PSStates.LV_ON, None, before=self.epics_HV.switch_on)
-        self.machine.add_transition('hv_off', PSStates.HV_ON, None, before=self.epics_HV.switch_off)
+        self.machine.add_transition('cmd_lv_on', PSStates.LV_OFF, None, before=self.epics_LV.switch_on)
+        self.machine.add_transition('cmd_lv_off', PSStates.LV_ON, None, before=self.epics_LV.switch_off)
+        self.machine.add_transition('cmd_hv_on', PSStates.LV_ON, None, before=self.epics_HV.switch_on)
+        self.machine.add_transition('cmd_hv_off', PSStates.HV_ON, None, before=self.epics_HV.switch_off)
 
         self.PV_clear_alarm = epics.PV("cleanroom:ClearAlarm", verbose=True)
+        self.machine.add_transition('cmd_clear_alarms', PSStates.ERROR, None, before=lambda: self.PV_clear_alarm.put("Yes"))
+
+    def _reconnect_epics(self):
+        self.epics_LV.reconnect()
+        self.epics_HV.reconnect()
 
     def epics_update_status(self):
         """Force FSM states depending on what EPICS tells us on the CAEN state"""
         # the first callbacks could be called before we have initialized the EPICSChannel objects
-        if self.state is not PSStates.DISCONNECTED:
+        if self.state not in [PSStates.DISCONNECTED, PSStates.INIT]:
+            if self.epics_LV.status > 1 or self.epics_HV.status > 5:
+                self.to_ERROR()
+                return
             if self.epics_LV.status == 1:
                 if self.epics_HV.status in [3, 5]:
                     self.to_HV_RAMP()
@@ -239,8 +256,10 @@ class TrackerChannel(object):
 
     def epics_connection_callback(self, pvname, conn, **kwargs):
         log.debug(f"In connection callback: got {pvname}, {conn}")
-        if conn is False:
-            self.disconnect_epics()
+        if conn:
+            self.fsm_reconnect_epics()
+        else:
+            self.fsm_disconnect_epics()
 
     def publish(self):
         if hasattr(self, "client"):
@@ -274,16 +293,16 @@ class TrackerChannel(object):
             device, cmd, command = parts
         elif len(parts) == 4:
             device, cmd, command, lvhv = parts
+            assert(lvhv in ["lv", "hv"])
         if cmd != 'cmd':
             raise ValueError('command messages should be of the form /device/cmd/#')
         message = message.decode() # message arrives as bytes array
-        commands = ['switch', 'setv', 'clear']
+        commands = ['switch', 'setv', 'clear', 'reconnect']
         assert(device == self.name)
         assert(command in commands)
-        assert(lvhv in ["lv", "hv"])
         if command == 'switch':
             assert(message in ["on", "off"])
-            fn = getattr(self, f"{lvhv}_{message}")
+            fn = getattr(self, f"cmd_{lvhv}_{message}")
             fn()
         elif command == 'setv':
             log.debug(f'Setting V0 to {message}')
@@ -293,7 +312,10 @@ class TrackerChannel(object):
                 self.epics_HV.setV = float(message)
         elif command == 'clear':
             log.debug("Clearing alarms!")
-            self.PV_clear_alarm.put("Yes")
+            self.cmd_clear_alarms()
+        elif command == 'reconnect':
+            log.debug("Reconnecting!")
+            self.fsm_reconnect_epics()
 
 def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
@@ -312,7 +334,7 @@ def on_message(client, userdata, msg):
 
 
 def run(device, mqtt_host):
-    device.connect_epics()
+    device.fsm_connect_epics()
 
     client = mqtt.Client()
     client.device = device
