@@ -42,6 +42,9 @@ class TrackerDCS(object):
             { 'trigger': 'fsm_disconnect_epics', 'source': '*', 'dest': DCSStates.DISCONNECTED },
         ]
 
+        self._lock = threading.Lock()
+        self._changed = False
+
         self.machine = Machine(model=self, states=DCSStates, transitions=transitions, initial=DCSStates.INIT)
         log.debug(f"Done - state is {self.state}")
 
@@ -67,15 +70,6 @@ class TrackerDCS(object):
         for chan in self.channels:
             chan.fsm_reconnect_epics()
 
-    # def switch_what(self, what):
-    #     assert(what in ["lv_on", "lv_off", "hv_on", "hv_off"])
-    #     fn = "cmd_" + what
-    #     for chan in self.channels:
-    #         # some channels might already be on if we are in LV_MIX
-    #         try:
-    #             getattr(chan, fn)()
-    #         except MachineError as e:
-    #             log.error(f"While processing {fn}: {e}")
     def switch_lv_on(self):
         for chan in self.channels:
             try:
@@ -105,39 +99,35 @@ class TrackerDCS(object):
                 log.error(e)
 
     def update_status(self):
+        old_state = self.state
         if self.state is DCSStates.INIT:
-            return
-        if any(c.state is PSStates.ERROR for c in self.channels):
+            pass
+        elif any(c.state is PSStates.ERROR for c in self.channels):
             self.to_ERROR()
-            return
-        if any(c.state is PSStates.DISCONNECTED for c in self.channels):
+        elif any(c.state is PSStates.DISCONNECTED for c in self.channels):
             self.to_DISCONNECTED()
-            return
-        if all(c.state is PSStates.CONNECTED for c in self.channels):
+        elif all(c.state is PSStates.CONNECTED for c in self.channels):
             self.to_CONNECTED()
-            return
-        if all(c.state is PSStates.LV_OFF for c in self.channels):
+        elif all(c.state is PSStates.LV_OFF for c in self.channels):
             self.to_LV_OFF()
-            return
-        if any(c.state is PSStates.LV_OFF for c in self.channels) and any(c.state is PSStates.LV_ON for c in self.channels):
+        elif any(c.state is PSStates.LV_OFF for c in self.channels) and any(c.state is PSStates.LV_ON for c in self.channels):
             self.to_LV_MIX()
-            return
-        if all(c.state is PSStates.LV_ON for c in self.channels):
+        elif all(c.state is PSStates.LV_ON for c in self.channels):
             self.to_LV_ON()
-            return
-        if all(c.state is PSStates.HV_ON for c in self.channels):
+        elif all(c.state is PSStates.HV_ON for c in self.channels):
             self.to_HV_ON()
-            return
-        if any(c.state is PSStates.HV_RAMP for c in self.channels):
+        elif any(c.state is PSStates.HV_RAMP for c in self.channels):
             self.to_HV_RAMP()
-            return
-        if any(c.state is PSStates.LV_ON for c in self.channels) and any(c.state is PSStates.HV_ON for c in self.channels):
+        elif any(c.state is PSStates.LV_ON for c in self.channels) and any(c.state is PSStates.HV_ON for c in self.channels):
             self.to_HV_MIX()
-            return
-        log.fatal(f"Should not happen! States are {', '.join(str(c.state) for c in self.channels)}")
+        else:
+            log.fatal(f"Should not happen! States are {', '.join(str(c.state) for c in self.channels)}")
+        if self.state != old_state:
+            with self._lock:
+                self._changed = True
 
     def command(self, topic, message):
-        commands = ['switch', 'setv', 'clear', 'reconnect']
+        commands = ['switch', 'setv', 'clear', 'refresh', 'reconnect']
         parts = topic.split('/')[1:]
         device, cmd, command = parts[:3]
         assert(device == self.name)
@@ -147,10 +137,10 @@ class TrackerDCS(object):
             lvhv = parts[3]
             assert(lvhv in ["lv", "hv"])
         if len(parts) >= 5:
-            chanID = int(parts[4])
+            chanID = int(parts[4].split("_")[1])
             assert(0 <= chanID < len(self.channels))
             channel = self.channels[chanID]
-        
+
         message = message.decode() # message arrives as bytes array
         if command == 'switch':
             assert(message in ["on", "off"])
@@ -158,7 +148,7 @@ class TrackerDCS(object):
             fn = f"cmd_{lvhv}_{message}"
             getattr(self, fn)()
         elif command == 'setv':
-            log.debug(f'Setting {lvhv} of channel {chan} V0 to {message}')
+            log.debug(f'Setting {lvhv} of channel {channel.name} V0 to {message}')
             if lvhv == "lv":
                 channel.epics_LV.setV = float(message)
             elif lvhv == "hv":
@@ -166,17 +156,22 @@ class TrackerDCS(object):
         elif command == 'clear':
             log.debug("Clearing alarms!")
             self.cmd_clear_alarms()
+        elif command == 'refresh':
+            self.publish(force=True)
         elif command == 'reconnect':
             log.debug("Reconnecting!")
             self.fsm_reconnect_epics()
 
-    def publish(self):
+    def publish(self, force=False):
         for chan in self.channels:
-            chan.publish()
+            chan.publish(force)
         if hasattr(self, "client"):
-            msg = json.dumps(self.status())
-            log.debug(f"Sending: {msg}")
-            self.client.publish('/{}/status'.format(self.name), msg)
+            with self._lock:
+                if self._changed or force:
+                    msg = json.dumps(self.status())
+                    log.debug(f"Sending: {msg}")
+                    self.client.publish('/{}/status'.format(self.name), msg)
+                    self._changed = False
 
     def status(self):
         return {
@@ -216,26 +211,6 @@ class TrackerDCS(object):
             time.sleep(1)
         client.disconnect()
         client.loop_stop()
-
-def run(device, mqtt_host):
-    device.fsm_connect_epics()
-
-    client = mqtt.Client()
-    client.device = device
-    device.register_mqtt(client)
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect(mqtt_host, 1883, 60)
-    # client.loop_forever()
-    client.loop_start()
-    while 1:
-        # epics.ca.poll()
-        device.update_status()
-        device.publish()
-        time.sleep(1)
-    time.sleep(1)
-    client.disconnect()
-    client.loop_stop()
 
 if __name__ == '__main__':
     import sys
