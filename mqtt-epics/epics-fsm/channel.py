@@ -7,11 +7,10 @@ import epics
 import threading
 import logging
 
-from epics import EPICSHVChannel, EPICSLVChannel
+from caen_epics import EPICSHVChannel, EPICSLVChannel
 
-log = logging.getLogger("channel")
-logging.basicConfig(format='%(asctime)s %(message)s')
-log.setLevel(logging.DEBUG)
+# log = logging.getLogger("epics")
+# log.setLevel(logging.DEBUG)
 
 class PSStates(enum.Enum):
     INIT = -1
@@ -26,7 +25,9 @@ class PSStates(enum.Enum):
 class TrackerChannel(object):
 
     def __init__(self, name, lv, hv):
-        log.debug("\n\n\n == Creating tracker channel == \n\n\n")
+        self.log = logging.getLogger(name)
+        self.log.setLevel(logging.DEBUG)
+        self.log.debug("\n\n\n == Creating tracker channel == \n\n\n")
 
         transitions = [
             { 'trigger': 'fsm_connect_epics', 'source': PSStates.INIT, 'dest': PSStates.CONNECTED, 'before': '_connect_epics' },
@@ -55,7 +56,7 @@ class TrackerChannel(object):
         self._changed = False
 
     def print_fsm(self):
-        log.debug(f"FSM state: {self.state}")
+        self.log.debug(f"FSM state: {self.state}")
 
     def _connect_epics(self):
         self.epics_LV = EPICSLVChannel(self.lv_board, self.lv_chan, self.epics_connection_callback, self.epics_update_callback)
@@ -77,7 +78,10 @@ class TrackerChannel(object):
         """Force FSM states depending on what EPICS tells us on the CAEN state"""
         # the first callbacks could be called before we have initialized the EPICSChannel objects
         if self.state not in [PSStates.DISCONNECTED, PSStates.INIT]:
-            if self.epics_LV.status > 1 or self.epics_HV.status > 5:
+            if self.epics_HV.status and self.epics_HV.status > 5:
+                self.to_ERROR()
+                return
+            if self.epics_LV.status and self.epics_LV.status > 1:
                 self.to_ERROR()
                 return
             if self.epics_LV.status == 1:
@@ -91,27 +95,30 @@ class TrackerChannel(object):
                 self.to_LV_OFF()
 
     def epics_update_callback(self, pvname, value, **kwargs):
-        log.debug(f"In update callback: got {pvname}, {value}")
+        # self.log.debug(f"In update callback: got {pvname}, {value}")
         if pvname.endswith("Pw") or pvname.endswith("Status"):
             self.epics_update_status()
         with self._lock:
             self._changed = True
 
     def epics_connection_callback(self, pvname, conn, **kwargs):
-        log.debug(f"In connection callback: got {pvname}, {conn}")
-        if conn:
-            self.fsm_reconnect_epics()
-        else:
+        # self.log.debug(f"In connection callback: got {pvname}, {conn}")
+        # if conn:
+        #     # an EPICS PV was reconnected
+        #     self.fsm_reconnect_epics()
+        # else:
+        if not conn:
             self.fsm_disconnect_epics()
 
     def publish(self):
         if hasattr(self, "client"):
             with self._lock:
-                if self._changed:
-                    msg = json.dumps(self.status())
-                    log.debug(f"Sending: {msg}")
-                    self.client.publish('/{}/status'.format(self.name), msg)
-                    self._changed = False
+                # if self._changed:
+                msg = json.dumps(self.status())
+                topic = f"/channels/status/{self.name}"
+                self.log.debug(f"Sending: {msg} to {topic}")
+                self.client.publish(topic, msg)
+                self._changed = False
 
     def status(self):
         return {
@@ -128,35 +135,36 @@ class TrackerChannel(object):
             'lv_iMon': self.epics_LV.iMon,
             'hv_iMon': self.epics_HV.iMon,
             'lv_temp': self.epics_LV.temp,
+            'fsm_state': str(self.state)
         }
 
-    def command(self, topic, message):
-        parts = topic.split('/')[1:]
-        if len(parts) == 3:
-            device, cmd, command = parts
-        elif len(parts) == 4:
-            device, cmd, command, lvhv = parts
-            assert(lvhv in ["lv", "hv"])
-        if cmd != 'cmd':
-            raise ValueError('command messages should be of the form /device/cmd/#')
-        message = message.decode() # message arrives as bytes array
-        commands = ['switch', 'setv', 'clear', 'reconnect']
-        assert(device == self.name)
-        assert(command in commands)
-        if command == 'switch':
-            assert(message in ["on", "off"])
-            fn = getattr(self, f"cmd_{lvhv}_{message}")
-            fn()
-        elif command == 'setv':
-            log.debug(f'Setting V0 to {message}')
-            if lvhv == "lv":
-                self.epics_LV.setV = float(message)
-            elif lvhv == "hv":
-                self.epics_HV.setV = float(message)
-        elif command == 'clear':
-            log.debug("Clearing alarms!")
-            self.cmd_clear_alarms()
-        elif command == 'reconnect':
-            log.debug("Reconnecting!")
-            self.fsm_reconnect_epics()
+    # def command(self, topic, message):
+    #     parts = topic.split('/')[1:]
+    #     if len(parts) == 3:
+    #         device, cmd, command = parts
+    #     elif len(parts) == 4:
+    #         device, cmd, command, lvhv = parts
+    #         assert(lvhv in ["lv", "hv"])
+    #     if cmd != 'cmd':
+    #         raise ValueError('command messages should be of the form /device/cmd/#')
+    #     message = message.decode() # message arrives as bytes array
+    #     commands = ['switch', 'setv', 'clear', 'reconnect']
+    #     assert(device == self.name)
+    #     assert(command in commands)
+    #     if command == 'switch':
+    #         assert(message in ["on", "off"])
+    #         fn = getattr(self, f"cmd_{lvhv}_{message}")
+    #         fn()
+    #     elif command == 'setv':
+    #         log.debug(f'Setting V0 to {message}')
+    #         if lvhv == "lv":
+    #             self.epics_LV.setV = float(message)
+    #         elif lvhv == "hv":
+    #             self.epics_HV.setV = float(message)
+    #     elif command == 'clear':
+    #         log.debug("Clearing alarms!")
+    #         self.cmd_clear_alarms()
+    #     elif command == 'reconnect':
+    #         log.debug("Reconnecting!")
+    #         self.fsm_reconnect_epics()
 

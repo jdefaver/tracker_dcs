@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
+import time
 import epics
 import logging
 
-from channel import TrackerChannel
-
 log = logging.getLogger("epics")
-logging.basicConfig(format='%(asctime)s %(message)s')
 log.setLevel(logging.DEBUG)
+
 def retry(maxTries):
     def dec_fn(fn):
         def do_fn(*args, **kwargs):
@@ -30,7 +29,7 @@ class DeadbandPV(epics.PV):
         super(DeadbandPV, self).__init__(*args, **kwargs)
 
     def dbCallback(self, pvname, value, **kwargs):
-        log.debug(f"In callback - {pvname} = {value}, old value = {self.oldValue}")
+        # log.debug(f"In callback - {pvname} = {value}, old value = {self.oldValue}")
         if abs(value - self.oldValue) > self.deadBand:
             self.oldValue = value
             self.oldCallback(pvname, value, **kwargs)
