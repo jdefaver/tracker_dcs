@@ -44,9 +44,9 @@ We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it r
 
 CC7 note: it seems the containers should run as root with `-u 0:0` and no `--userns`; also `--init` is not supported there.
 
-We can then run the HV:
+We can then run the DCS:
 ```
-podman run --pod tracker_dcs -d --init -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./mqtt-epics/hv.py:/usr/src/app/hv.py localhost/pyepics python -u hv.py hv localhost
+podman run --pod tracker_dcs -d --init -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./mqtt-epics/epics-fsm/:/usr/src/app/epics-fsm localhost/pyepics python -u epics-fsm/dcs.py dcs localhost
 ```
 
 When running in the UCL network EPICS can also work with `-e EPICS_CA_AUTO_ADDR_LIST=130.104.48.188` instead of the above.
