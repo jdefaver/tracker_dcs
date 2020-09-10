@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 import time
 import epics
 import logging
 
 log = logging.getLogger("epics")
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 def retry(maxTries):
     def dec_fn(fn):
@@ -29,24 +27,24 @@ class DeadbandPV(epics.PV):
         super(DeadbandPV, self).__init__(*args, **kwargs)
 
     def dbCallback(self, pvname, value, **kwargs):
-        # log.debug(f"In callback - {pvname} = {value}, old value = {self.oldValue}")
+        log.debug(f"In deadband-callback - {pvname} = {value}, old value = {self.oldValue}")
         if abs(value - self.oldValue) > self.deadBand:
             self.oldValue = value
             self.oldCallback(pvname, value, **kwargs)
 
 
 class EPICSChannel(object):
-    def __init__(self, board, chan, connection_callback, update_callback, verbose=False):
+    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1):
         self.board = board
         self.chan = chan
         self.prefix = f"cleanroom:{self.board:02}:{self.chan:03}:"
         self.PVs = {}
         for var in ["Pw", "Status"]:
             self.PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
-            time.sleep(0.1)
+            time.sleep(sleep)
         for var in ["V0Set", "I0Set", "VMon", "IMon"]:
             self.PVs[var] = DeadbandPV(self.prefix + var, dead_band=0.01, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
-            time.sleep(0.1)
+            time.sleep(sleep)
 
     def reconnect(self):
         for pv in self.PVs.values():
@@ -92,15 +90,15 @@ class EPICSChannel(object):
         return self.PVs["IMon"].get()
 
 class EPICSLVChannel(EPICSChannel):
-    def __init__(self, board, chan, connection_callback, update_callback, verbose=False):
-        super(EPICSLVChannel, self).__init__(board, chan, connection_callback, update_callback, verbose)
+    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1):
+        super(EPICSLVChannel, self).__init__(board, chan, connection_callback, update_callback, verbose, sleep)
     
         for var in ["UNVThr", "OVVThr"]:
             self.PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
-            time.sleep(0.1)
+            time.sleep(sleep)
         for var in ["Temp"]:
             self.PVs[var] = DeadbandPV(self.prefix + var, dead_band=0.01, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
-            time.sleep(0.1)
+            time.sleep(sleep)
 
     @property
     def unVThr(self):
@@ -122,8 +120,8 @@ class EPICSLVChannel(EPICSChannel):
 
 
 class EPICSHVChannel(EPICSChannel):
-    def __init__(self, board, chan, connection_callback, update_callback, verbose=False):
-        super(EPICSHVChannel, self).__init__(board, chan, connection_callback, update_callback, verbose)
+    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1):
+        super(EPICSHVChannel, self).__init__(board, chan, connection_callback, update_callback, verbose, sleep)
 
         # adjust dead bands from EPICSChannel values
         # here currents are in uA
@@ -134,7 +132,7 @@ class EPICSHVChannel(EPICSChannel):
 
         for var in ["RUp", "RDWn", "ImRange"]:
             self.PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
-            time.sleep(0.1)
+            time.sleep(sleep)
 
     # ramp speed in V/s
     @property
@@ -160,5 +158,11 @@ class EPICSHVChannel(EPICSChannel):
     @range.setter
     def range(self, value):
         assert(value in ["Low", "High"])
+        if value == "Low":
+            for var in ["I0Set", "IMon"]:
+                self.PVs[var].deadBand = 0.001
+        if value == "High":
+            for var in ["I0Set", "IMon"]:
+                self.PVs[var].deadBand = 0.01
         self.PVs["ImRange"].put(value)
 
