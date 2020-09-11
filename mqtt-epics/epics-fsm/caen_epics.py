@@ -126,7 +126,7 @@ class EPICSHVChannel(EPICSChannel):
         # adjust dead bands from EPICSChannel values
         # here currents are in uA
         for var in ["V0Set", "VMon"]:
-            self.PVs[var].deadBand = 1.
+            self.PVs[var].deadBand = 0.01
         for var in ["I0Set", "IMon"]:
             self.PVs[var].deadBand = 0.01 # 0.01=10nA in high-power mode; 0.001=1nA in high-res mode
 

@@ -59,7 +59,7 @@ class TrackerChannel(object):
         self.machine.add_transition("cmd_lv_on", PSStates.LV_OFF, None, before=self.epics_LV.switch_on)
         self.machine.add_transition("cmd_lv_off", PSStates.LV_ON, None, before=self.epics_LV.switch_off)
         self.machine.add_transition("cmd_hv_on", PSStates.LV_ON, None, before=self.epics_HV.switch_on)
-        self.machine.add_transition("cmd_hv_off", PSStates.HV_ON, None, before=self.epics_HV.switch_off)
+        self.machine.add_transition("cmd_hv_off", [PSStates.HV_ON, PSStates.HV_RAMP], None, before=self.epics_HV.switch_off)
 
     def _reconnect_epics(self):
         self.epics_LV.reconnect()

@@ -224,6 +224,7 @@ if __name__ == "__main__":
     import sys
     # FIXME use argparse
     device_name, mqtt_host = sys.argv[1:3]
+    verbose = False
     if len(sys.argv) > 3:
         verbose = sys.argv[3]
         if verbose == "-v":
