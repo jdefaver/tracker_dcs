@@ -99,7 +99,7 @@ class TrackerChannel(object):
             with self._lock:
                 if self._changed or force:
                     msg = json.dumps(self.status())
-                    topic = f"/channels/status/{self.name}"
+                    topic = f"channels/status/{self.name}"
                     self.log.debug(f"Sending: {msg} to {topic}")
                     self.client.publish(topic, msg)
                     self._changed = False

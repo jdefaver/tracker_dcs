@@ -137,7 +137,7 @@ class TrackerDCS(object):
 
     def command(self, topic, message):
         commands = ["switch", "setv", "clear", "refresh", "reconnect"]
-        parts = topic.split("/")[1:]
+        parts = topic.split("/")
         device, cmd, command = parts[:3]
         assert(device == self.name)
         assert(cmd == "cmd")
@@ -179,7 +179,7 @@ class TrackerDCS(object):
                 if self._changed or force:
                     msg = json.dumps(self.status())
                     log.debug(f"Sending: {msg}")
-                    self.client.publish("/{}/status".format(self.name), msg)
+                    self.client.publish("{}/status".format(self.name), msg)
                     self._changed = False
 
     def status(self):
@@ -191,7 +191,7 @@ class TrackerDCS(object):
         def on_connect(client, userdata, flags, rc):
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
-            client.subscribe(f"/{self.name}/cmd/#")
+            client.subscribe(f"{self.name}/cmd/#")
             # make sure the initial values are published at restart
             self.publish(force=True)
 
