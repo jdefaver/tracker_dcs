@@ -99,13 +99,14 @@ class TrackerChannel(object):
             with self._lock:
                 if self._changed or force:
                     msg = json.dumps(self.status())
-                    topic = f"channels/status/{self.name}"
+                    topic = f"dcs/channels"
                     self.log.debug(f"Sending: {msg} to {topic}")
                     self.client.publish(topic, msg)
                     self._changed = False
 
     def status(self):
         return {
+            "name": self.name,
             "lv_board": self.lv_board,
             "lv_channel": self.lv_chan,
             "hv_board": self.hv_board,
