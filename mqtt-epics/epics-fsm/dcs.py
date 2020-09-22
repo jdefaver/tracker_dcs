@@ -43,7 +43,7 @@ class TrackerDCS(object):
         ]
 
         self._lock = threading.Lock()
-        self._changed = False
+        self._changed = True
 
         self.machine = Machine(model=self, states=DCSStates, transitions=transitions, initial=DCSStates.INIT)
 
@@ -187,7 +187,7 @@ class TrackerDCS(object):
             "fsm_state": str(self.state).split(".")[1],
         }
 
-    def launch_mqtt(self, host):
+    def launch_mqtt(self, mqtt_host):
         def on_connect(client, userdata, flags, rc):
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
@@ -214,8 +214,8 @@ class TrackerDCS(object):
         client.loop_start()
         while 1:
             epics.ca.poll()
-            device.update_status()
-            device.publish()
+            self.update_status()
+            self.publish()
             time.sleep(1)
         client.disconnect()
         client.loop_stop()
