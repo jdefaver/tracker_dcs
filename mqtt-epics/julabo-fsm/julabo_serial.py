@@ -104,9 +104,6 @@ class JulaboFSM(object):
             { "trigger": "fsm_connect", "source": JulaboStates.DISCONNECTED, "dest": JulaboStates.CONNECTED, "before": "_connect_serial" }
         ]
 
-        self._lock = threading.Lock()
-        self._changed = True
-
         self.machine = Machine(model=self, states=JulaboStates, transitions=transitions, initial=JulaboStates.DISCONNECTED)
 
         for s in JulaboStates:
@@ -116,45 +113,32 @@ class JulaboFSM(object):
 
     def print_fsm(self):
         """Log FSM state every time a new state is entered - CAUTION: do not change the state while owning the lock!"""
-        with self._lock:
-            if self._changed:
-                log.info(f"FSM state: {self.state}")
+        log.info(f"FSM state: {self.state}")
 
     def _connect_serial(self):
         self.julaboSerial = JulaboSerial(self.remote)
 
         self.machine.add_transition("cmd_on", JulaboStates.OFF, None, before=self.julaboSerial.start)
-        self.machine.add_transition("cmd_off", JulaboStates.ON, None, before=self.julaboSerial.stop)
+        self.machine.add_transition("cmd_off", [JulaboStates.ON, JulaboStates.ERROR], None, before=self.julaboSerial.stop)
 
     def update_status(self):
-        old_state = self.state
         if self.state is JulaboStates.DISCONNECTED:
-            pass
+            return None
         else:
-            try:
-                status = self.julaboSerial.status()
-            except serial.serialutil.SerialException as e:
-                log.error(f"Serial error: {e}")
-                self.to_DISCONNECTED()
-            except Exception as e:
-                log.error(f"Error while trying to get the chiller status: {e}")
+            status = self.julaboSerial.status()
+            log.debug(f"Chiller status: {status}")
+            if status[0] < 0:
                 self.to_ERROR()
+            elif status[0] < 2:
+                # manual control
+                self.to_ERROR()
+            elif status[0] == 3:
+                self.to_ON()
+            elif status[0] == 2:
+                self.to_OFF()
             else:
-                log.debug(f"Chiller status: {status}")
-                if status[0] < 0:
-                    self.to_ERROR()
-                elif status[0] < 2:
-                    # manual control
-                    self.to_ERROR()
-                elif status[0] == 1:
-                    self.to_ON()
-                elif status[0] == 2:
-                    self.to_OFF()
-                else:
-                    log.fatal(f"Could not interpret status {status}")
-        if self.state != old_state:
-            with self._lock:
-                self._changed = True
+                log.fatal(f"Could not interpret status {status}")
+            return status[0]
 
     def command(self, topic, message):
         commands = ["start", "stop", "refresh", "reconnect", "setWT", "useSP", "useExt", "useInt", "setPress"]
@@ -168,7 +152,7 @@ class JulaboFSM(object):
         elif command == "stop":
             self.cmd_off()
         elif command == "refresh":
-            self.publish(force=True)
+            self.publish()
         elif command == "reconnect":
             self.fsm_connect()
         elif command == "useExt":
@@ -189,23 +173,18 @@ class JulaboFSM(object):
                 press = message["press"]
                 self.julaboSerial.setPressureStage(press)
 
-    def publish(self, force=False):
+    def publish(self):
         if hasattr(self, "client"):
-            should_publish = force
-            with self._lock:
-                if self._changed:
-                    should_publish = True
-            if should_publish:
-                msg = json.dumps(self.status())
-                log.debug(f"Sending: {msg}")
-                self.client.publish("julabo/status", msg)
-                self._changed = False
+            msg = json.dumps(self.status())
+            log.debug(f"Sending: {msg}")
+            self.client.publish("julabo/status", msg)
 
     def status(self):
         status = {}
         try:
+            status_code = self.update_status()
             status.update({
-                "status_code": self.julaboSerial.status()[0],
+                "status_code": status_code,
                 "internal_temp": self.julaboSerial.readActualInt(),
                 "setpoint_1": self.julaboSerial.readSetPoint(1),
                 "setpoint_2": self.julaboSerial.readSetPoint(2),
@@ -214,9 +193,12 @@ class JulaboFSM(object):
                 "power": self.julaboSerial.readPower(),
                 "ext_is_used": self.julaboSerial.externalIsUsed(),
             })
-            status["external_temp"] = self.julaboSerial.readActualExtPt100() if status["ext_is_used"] else 0
+            try:
+                status["external_temp"] = self.julaboSerial.readActualExtPt100()
+            except ValueError:
+                status["external_temp"]  = 0
         except serial.serialutil.SerialException as e:
-            log.error(f"Serial error: {e}")
+            log.error(f"Serial error while trying to get the chiller status: {e}")
             self.to_DISCONNECTED()
         except Exception as e:
             log.error(f"Error while reading all the values for publication: {e}")
@@ -247,7 +229,6 @@ class JulaboFSM(object):
         client.connect(mqtt_host, 1883, 60)
         client.loop_start()
         while 1:
-            self.update_status()
             self.publish()
             time.sleep(5)
         client.disconnect()
