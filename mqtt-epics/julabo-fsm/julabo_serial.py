@@ -133,6 +133,13 @@ class JulaboFSM(object):
         else:
             try:
                 status = self.julaboSerial.status()
+            except serial.serialutil.SerialException as e:
+                log.error(f"Serial error: {e}")
+                self.to_DISCONNECTED()
+            except Exception as e:
+                log.error(f"Error while trying to get the chiller status: {e}")
+                self.to_ERROR()
+            else:
                 log.debug(f"Chiller status: {status}")
                 if status[0] < 0:
                     self.to_ERROR()
@@ -145,15 +152,12 @@ class JulaboFSM(object):
                     self.to_OFF()
                 else:
                     log.fatal(f"Could not interpret status {status}")
-            except Exception as e:
-                log.error(f"Error while trying to get the chiller status: {e}")
-                self.to_ERROR()
         if self.state != old_state:
             with self._lock:
                 self._changed = True
 
     def command(self, topic, message):
-        commands = ["start", "stop", "refresh", "setWT", "useSP", "useExt", "useInt", "setPress"]
+        commands = ["start", "stop", "refresh", "reconnect", "setWT", "useSP", "useExt", "useInt", "setPress"]
         device, cmd, command = topic.split("/")
         assert(device == "julabo")
         assert(cmd == "cmd")
@@ -165,6 +169,8 @@ class JulaboFSM(object):
             self.cmd_off()
         elif command == "refresh":
             self.publish(force=True)
+        elif command == "reconnect":
+            self.fsm_connect()
         elif command == "useExt":
             self.julaboSerial.useExternalPt100()
         elif command == "useInt":
@@ -185,30 +191,37 @@ class JulaboFSM(object):
 
     def publish(self, force=False):
         if hasattr(self, "client"):
-            try:
-                with self._lock:
-                    if self._changed or force:
-                        msg = json.dumps(self.status())
-                        log.debug(f"Sending: {msg}")
-                        self.client.publish("julabo/status", msg)
-                        self._changed = False
-            except Exception as e:
-                log.error(f"Error while reading all the values for publication: {e}")
-                self.to_ERROR()
+            should_publish = force
+            with self._lock:
+                if self._changed:
+                    should_publish = True
+            if should_publish:
+                msg = json.dumps(self.status())
+                log.debug(f"Sending: {msg}")
+                self.client.publish("julabo/status", msg)
+                self._changed = False
 
     def status(self):
-        status = {
-            "fsm_state": str(self.state).split(".")[1],
-            "status_code": self.julaboSerial.status()[0],
-            "internal_temp": self.julaboSerial.readActualInt(),
-            "setpoint_1": self.julaboSerial.readSetPoint(1),
-            "setpoint_2": self.julaboSerial.readSetPoint(2),
-            "setpoint_3": self.julaboSerial.readSetPoint(3),
-            "used_setpoint": self.julaboSerial.getUsedSetPoint(),
-            "power": self.julaboSerial.readPower(),
-            "ext_is_used": self.julaboSerial.externalIsUsed(),
-        }
-        status["external_temp"] = self.julaboSerial.readActualExtPt100() if status["ext_is_used"] else 0
+        status = {}
+        try:
+            status.update({
+                "status_code": self.julaboSerial.status()[0],
+                "internal_temp": self.julaboSerial.readActualInt(),
+                "setpoint_1": self.julaboSerial.readSetPoint(1),
+                "setpoint_2": self.julaboSerial.readSetPoint(2),
+                "setpoint_3": self.julaboSerial.readSetPoint(3),
+                "used_setpoint": self.julaboSerial.getUsedSetPoint(),
+                "power": self.julaboSerial.readPower(),
+                "ext_is_used": self.julaboSerial.externalIsUsed(),
+            })
+            status["external_temp"] = self.julaboSerial.readActualExtPt100() if status["ext_is_used"] else 0
+        except serial.serialutil.SerialException as e:
+            log.error(f"Serial error: {e}")
+            self.to_DISCONNECTED()
+        except Exception as e:
+            log.error(f"Error while reading all the values for publication: {e}")
+            self.to_ERROR()
+        status["fsm_state"] = str(self.state).split(".")[1]
         return status
 
     def launch_mqtt(self, mqtt_host):
