@@ -1,9 +1,11 @@
-from transitions.extensions import LockedMachine as Machine
 import enum
 import json
-import epics
 import threading
 import logging
+
+from transitions.extensions import LockedMachine as Machine
+
+import epics
 
 from caen_epics import EPICSHVChannel, EPICSLVChannel
 
@@ -19,15 +21,16 @@ class PSStates(enum.Enum):
 
 class TrackerChannel(object):
 
-    def __init__(self, name, lv, hv, verbose=False):
-        self.log = logging.getLogger(name)
+    def __init__(self, channel_num, lv, hv, module, verbose=False):
+        self.log = logging.getLogger(f"channel {channel_num}")
         self.verbose = verbose
         self.log.setLevel(logging.INFO)
         if self.verbose:
             self.log.setLevel(logging.DEBUG)
-        self.log.info(f"Creating tracker channel {name}")
+        self.log.info(f"Creating tracker channel {channel_num} for module {module}")
         
-        self.name = name
+        self.channel_num = channel_num
+        self.module = module
         self.lv_board, self.lv_chan = lv
         self.hv_board, self.hv_chan = hv
 
@@ -106,7 +109,8 @@ class TrackerChannel(object):
 
     def status(self):
         return {
-            "name": self.name,
+            "channel_num": self.channel_num,
+            "module": self.module,
             "lv_board": self.lv_board,
             "lv_channel": self.lv_chan,
             "hv_board": self.hv_board,

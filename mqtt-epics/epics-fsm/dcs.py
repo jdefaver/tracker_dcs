@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
-from transitions.extensions import LockedMachine as Machine
-from transitions.core import MachineError
 import enum
-import paho.mqtt.client as mqtt
 import json
 import threading
 import time
 import logging
+import yaml
+import argparse
+
+from transitions.extensions import LockedMachine as Machine
+from transitions.core import MachineError
+
+import paho.mqtt.client as mqtt
 import epics
 
 from channel import TrackerChannel, PSStates
@@ -30,11 +34,9 @@ class DCSStates(enum.Enum):
 
 class TrackerDCS(object):
 
-    def __init__(self, name, verbose=False):
-        log.info(f"Initializing DCS: {name}")
-        self.name = name
+    def __init__(self, configPath, verbose=False):
+        log.info(f"Initializing DCS")
         self.verbose = verbose
-        self.channels = []
 
         transitions = [
             { "trigger": "fsm_connect_epics", "source": DCSStates.INIT, "dest": DCSStates.CONNECTED, "before": "_connect_epics" },
@@ -49,6 +51,13 @@ class TrackerDCS(object):
 
         for s in DCSStates:
             getattr(self.machine, "on_enter_" + str(s).split(".")[1])("print_fsm")
+        
+        self.channels = []
+        with open(configPath) as f:
+            config = yaml.safe_load(f)
+        self.name = config.get("name", "dcs")
+        for i,c in enumerate(config["channels"]):
+            self.add_channel(i, c["lv"], c["hv"], c["module"])
 
         log.info(f"Done - state is {self.state}")
 
@@ -57,11 +66,15 @@ class TrackerDCS(object):
             if self._changed:
                 log.info(f"FSM state: {self.state}")
 
-    def add_channel(self, lv, hv):
+    def add_channel(self, channel_num, lv, hv, module):
+        print(lv)
+        print(lv[0])
+        print(hv)
         assert(self.state is DCSStates.INIT)
         assert(len(lv) == 2 and 0 <= lv[0] <= 4 and 0 <= lv[1] <= 7)
         assert(len(hv) == 2 and 12 <= hv[0] <= 15 and 0 <= hv[1] <= 11)
-        self.channels.append(TrackerChannel(f"module_{len(self.channels)}", lv, hv, verbose=self.verbose))
+        log.debug(f"Adding channel number {channel_num} with lv={lv}, hv={hv}, module={module}")
+        self.channels.append(TrackerChannel(channel_num, lv, hv, module, verbose=self.verbose))
 
     def _connect_epics(self):
         for chan in self.channels:
@@ -146,7 +159,7 @@ class TrackerDCS(object):
             lvhv = parts[3]
             assert(lvhv in ["lv", "hv"])
         if len(parts) >= 5:
-            chanID = int(parts[4].split("_")[1])
+            chanID = int(parts[4])
             assert(0 <= chanID < len(self.channels))
             channel = self.channels[chanID]
 
@@ -157,7 +170,7 @@ class TrackerDCS(object):
             fn = f"cmd_{lvhv}_{message}"
             getattr(self, fn)()
         elif command == "setv":
-            log.debug(f"Setting {lvhv} of channel {channel.name} V0 to {message}")
+            log.debug(f"Setting {lvhv} of channel {channel.channel_num} V0 to {message}")
             if lvhv == "lv":
                 channel.epics_LV.setV = float(message)
             elif lvhv == "hv":
@@ -221,19 +234,16 @@ class TrackerDCS(object):
         client.loop_stop()
 
 if __name__ == "__main__":
-    import sys
-    # FIXME use argparse
-    device_name, mqtt_host = sys.argv[1:3]
-    verbose = False
-    if len(sys.argv) > 3:
-        verbose = sys.argv[3]
-        if verbose == "-v":
-            log.setLevel(logging.DEBUG)
-            logging.getLogger("epics").setLevel(logging.DEBUG)
-            verbose = True
+    parser = argparse.ArgumentParser("Entry point for CAEN PS control and monitoring backend")
+    parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("--mqtt-host", required=True, help="URL of MQTT broker")
+    parser.add_argument("config", help="YAML configuration file listing channels")
+    args = parser.parse_args()
 
-    device = TrackerDCS(device_name, verbose=verbose)
-    device.add_channel((0, 0), (12, 0))
-    device.add_channel((0, 1), (12, 1))
+    if args.verbose:
+        log.setLevel(logging.DEBUG)
+        logging.getLogger("epics").setLevel(logging.DEBUG)
+
+    device = TrackerDCS(args.config, verbose=args.verbose)
     device.fsm_connect_epics()
-    device.launch_mqtt(mqtt_host)
+    device.launch_mqtt(args.mqtt_host)

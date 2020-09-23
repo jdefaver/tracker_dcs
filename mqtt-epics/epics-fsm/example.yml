@@ -1,0 +1,7 @@
+channels:
+    - module: module_0
+      lv: [0, 0]
+      hv: [12, 0]
+    - module: module_1
+      lv: [0, 1]
+      hv: [12, 1]
