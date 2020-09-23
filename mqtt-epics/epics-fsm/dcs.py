@@ -132,6 +132,8 @@ class TrackerDCS(object):
             self.to_CONNECTED()
         elif all(c.state is PSStates.LV_OFF for c in self.channels):
             self.to_LV_OFF()
+        elif any(c.state is PSStates.LV_OFF for c in self.channels) and any(c.state is PSStates.HV_ON for c in self.channels):
+            self.to_ERROR()
         elif any(c.state is PSStates.LV_OFF for c in self.channels) and any(c.state is PSStates.LV_ON for c in self.channels):
             self.to_LV_MIX()
         elif all(c.state is PSStates.LV_ON for c in self.channels):
