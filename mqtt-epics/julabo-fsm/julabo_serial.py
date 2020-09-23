@@ -19,12 +19,12 @@ class JulaboSerial(object):
         if remote:
             self.ser = serial.serial_for_url('socket://130.104.48.63:8000', timeout=1)
         else:
-            self.ser = serial.Serial('/dev/ttyUSB0', baudrate=38400, parity=serial.PARITY_NONE, bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, xonxoff=True, timeout=1)
-        
+            self.ser = serial.Serial('/dev/ttyUSB0', baudrate=4800, parity=serial.PARITY_EVEN, bytesize=serial.SEVENBITS, stopbits=serial.STOPBITS_ONE, rtscts=True, timeout=1)
+
         time.sleep(0.1)
         self.ser.flushOutput()
         self.ser.flushInput()
-        
+
         log.debug("Status: {}".format(self.status()))
         log.debug("Version: {}".format(self._ask("VERSION")))
 
@@ -115,6 +115,7 @@ class JulaboFSM(object):
         log.info(f"Done - state is {self.state}")
 
     def print_fsm(self):
+        """Log FSM state every time a new state is entered - CAUTION: do not change the state while owning the lock!"""
         with self._lock:
             if self._changed:
                 log.info(f"FSM state: {self.state}")
@@ -132,21 +133,21 @@ class JulaboFSM(object):
         else:
             try:
                 status = self.julaboSerial.status()
+                log.debug(f"Chiller status: {status}")
+                if status[0] < 0:
+                    self.to_ERROR()
+                elif status[0] < 2:
+                    # manual control
+                    self.to_ERROR()
+                elif status[0] == 1:
+                    self.to_ON()
+                elif status[0] == 2:
+                    self.to_OFF()
+                else:
+                    log.fatal(f"Could not interpret status {status}")
             except Exception as e:
                 log.error(f"Error while trying to get the chiller status: {e}")
-                self.to_DISCONNECTED()
-            log.debug(f"Chiller status: {status}")
-            if status[0] < 0:
                 self.to_ERROR()
-            elif status[0] < 2:
-                # manual control
-                self.to_DISCONNECTED
-            elif status[0] == 1:
-                self.to_ON()
-            elif status[0] == 2:
-                self.to_OFF()
-            else:
-                log.fatal(f"Could not interpret status {status}")
         if self.state != old_state:
             with self._lock:
                 self._changed = True
@@ -154,7 +155,7 @@ class JulaboFSM(object):
     def command(self, topic, message):
         commands = ["start", "stop", "refresh", "setWT", "useSP", "useExt", "useInt", "setPress"]
         device, cmd, command = topic.split("/")
-        assert(device == self.name)
+        assert(device == "julabo")
         assert(cmd == "cmd")
         assert(command in commands)
 
@@ -184,12 +185,16 @@ class JulaboFSM(object):
 
     def publish(self, force=False):
         if hasattr(self, "client"):
-            with self._lock:
-                if self._changed or force:
-                    msg = json.dumps(self.status())
-                    log.debug(f"Sending: {msg}")
-                    self.client.publish("julabo/status", msg)
-                    self._changed = False
+            try:
+                with self._lock:
+                    if self._changed or force:
+                        msg = json.dumps(self.status())
+                        log.debug(f"Sending: {msg}")
+                        self.client.publish("julabo/status", msg)
+                        self._changed = False
+            except Exception as e:
+                log.error(f"Error while reading all the values for publication: {e}")
+                self.to_ERROR()
 
     def status(self):
         status = {
@@ -241,7 +246,7 @@ if __name__ == '__main__':
 
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-r", "--remote", action="store_true", help="Use remote interface instead of /dev/ttyUSB0")
-    
+
     parser.add_argument("--start-mqtt", action="store_true", help="Start MQTT loop and disregard any other commands")
     parser.add_argument("--mqtt-host", help="MQTT broker host")
 
@@ -274,10 +279,10 @@ if __name__ == '__main__':
             print("Setpoint used: {}".format(serialChiller.julaboSerial.getUsedSetPoint()))
         if args.read_pow:
             print("Power level: {}".format(serialChiller.julaboSerial.readPower()))
-        
+
         if args.read_wt or args.use_sp or args.set_wt != float("-inf"):
             assert(1 <= args.sp <= 3)
-        
+
         if args.read_wt:
             print("Working temperature for setpoint {}: {:.2f}C".format(args.sp, serialChiller.julaboSerial.readSetPoint(args.sp)))
         if args.set_wt != float("-inf"):
