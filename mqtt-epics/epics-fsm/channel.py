@@ -109,7 +109,7 @@ class TrackerChannel(object):
 
     def status(self):
         return {
-            "channel_num": self.channel_num,
+            "channel_num": str(self.channel_num), # string because granafa queries with regexp won't work with ints
             "module": self.module,
             "lv_board": self.lv_board,
             "lv_channel": self.lv_chan,

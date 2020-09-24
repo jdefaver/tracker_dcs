@@ -67,9 +67,6 @@ class TrackerDCS(object):
                 log.info(f"FSM state: {self.state}")
 
     def add_channel(self, channel_num, lv, hv, module):
-        print(lv)
-        print(lv[0])
-        print(hv)
         assert(self.state is DCSStates.INIT)
         assert(len(lv) == 2 and 0 <= lv[0] <= 4 and 0 <= lv[1] <= 7)
         assert(len(hv) == 2 and 12 <= hv[0] <= 15 and 0 <= hv[1] <= 11)
