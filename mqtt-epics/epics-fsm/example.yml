@@ -1,7 +1,47 @@
 channels:
-    - module: module_0
-      lv: [0, 0]
-      hv: [12, 0]
-    - module: module_1
-      lv: [0, 1]
-      hv: [12, 1]
+    "0":
+        lv:
+            board: 0
+            chan: 0
+            setV: 13.
+        hv:
+            board: 12
+            chan: 0
+        module: module_0
+    "1":
+        lv:
+            board: 0
+            chan: 1
+        hv:
+            board: 12
+            chan: 1
+        module: module_1
+    "2":
+        lv:
+            board: 0
+            chan: 2
+        hv:
+            board: 12
+            chan: 2
+# global values are set for all channels
+global:
+    lv:
+        setV: 12.
+        maxI: 2.5 # in A
+        ovVThr: 15.
+        unVThr: 0.
+        tripTime: 10. # in s
+        tripInt: 0b0
+        tripExt: 0b00010001
+        rampUpTime: 100. # ramp up time, in ms
+        rampDwnTime: 100.
+    hv:
+        setV: 200.
+        maxI: 500. # in uA
+        rampUpSpeed: 50. # ramp up speed, in V/s
+        rampDwnSpeed: 50.
+        tripTime: 10. # in s
+        tripInt: 0b0
+        tripExt: 0b00010001
+        tripMode: Kill # Kill (immediately) or Ramp (down at usual speed) when tripped
+        imRange: Low # Low (350uA max, higher precision) or High (3.5mA max)

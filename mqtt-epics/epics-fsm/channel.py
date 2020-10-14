@@ -21,16 +21,20 @@ class PSStates(enum.Enum):
 
 class TrackerChannel(object):
 
-    def __init__(self, channel_num, lv, hv, module, verbose=False):
-        self.log = logging.getLogger(f"channel {channel_num}")
+    def __init__(self, chan_id, lv, hv, module=None, verbose=False):
+        assert(len(lv) == 2 and 0 <= lv[0] <= 4 and 0 <= lv[1] <= 7)
+        assert(len(hv) == 2 and 12 <= hv[0] <= 15 and 0 <= hv[1] <= 11)
+
+        self.log = logging.getLogger(f"channel {chan_id}")
         self.verbose = verbose
         self.log.setLevel(logging.INFO)
         if self.verbose:
             self.log.setLevel(logging.DEBUG)
-        self.log.info(f"Creating tracker channel {channel_num} for module {module}")
-        
-        self.channel_num = channel_num
+        self.log.info(f"Creating tracker channel {chan_id} for module {module}")
+
+        self.chan_id = chan_id
         self.module = module
+        self.active = (module is not None)
         self.lv_board, self.lv_chan = lv
         self.hv_board, self.hv_chan = hv
 
@@ -109,20 +113,39 @@ class TrackerChannel(object):
 
     def status(self):
         return {
-            "channel_num": str(self.channel_num), # string because granafa queries with regexp won't work with ints
+            "id": self.chan_id,
             "module": self.module,
+
             "lv_board": self.lv_board,
             "lv_channel": self.lv_chan,
+            "lv_status": self.epics_LV.status,
+            "lv_setV": self.epics_LV.setV,
+            "lv_vMon": self.epics_LV.vMon,
+            "lv_iMon": self.epics_LV.iMon,
+            "lv_maxI": self.epics_LV.maxI,
+            "lv_tripTime": self.epics_LV.tripTime,
+            "lv_tripInt": self.epics_LV.tripInt,
+            "lv_tripExt": self.epics_LV.tripExt,
+            "lv_unVthr": self.epics_LV.unVThr,
+            "lv_ovVthr": self.epics_LV.ovVThr,
+            "lv_rampUpTime": self.epics_LV.rampUpTime,
+            "lv_rampDwnTime": self.epics_LV.rampDwnTime,
+            "lv_temp": self.epics_LV.temp,
+
             "hv_board": self.hv_board,
             "hv_channel": self.hv_chan,
-            "lv_status": self.epics_LV.status,
             "hv_status": self.epics_HV.status,
-            "lv_setV": self.epics_LV.setV,
             "hv_setV": self.epics_HV.setV,
-            "lv_vMon": self.epics_LV.vMon,
             "hv_vMon": self.epics_HV.vMon,
-            "lv_iMon": self.epics_LV.iMon,
             "hv_iMon": self.epics_HV.iMon,
-            "lv_temp": self.epics_LV.temp,
+            "hv_maxI": self.epics_HV.maxI,
+            "hv_tripTime": self.epics_HV.tripTime,
+            "hv_tripInt": self.epics_HV.tripInt,
+            "hv_tripExt": self.epics_HV.tripExt,
+            "hv_rampUpSpeed": self.epics_HV.rampUpSpeed,
+            "hv_rampDwnSpeed": self.epics_HV.rampDwnSpeed,
+            "hv_imRange": self.epics_HV.imRange,
+            "hv_tripMode": self.epics_HV.tripMode,
+            
             "fsm_state": str(self.state).split(".")[1]
         }
