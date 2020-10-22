@@ -83,7 +83,7 @@ class TrackerDCS(object):
     def _connect_epics(self):
         for chan in self.all_channels.values():
             chan.fsm_connect_epics()
-        
+
         # now set all the values
         global_config = self.config.get("global", {})
         for chan_id,chan in self.all_channels.items():
@@ -95,8 +95,11 @@ class TrackerDCS(object):
                     if not hasattr(epics_c, vNm) or not isinstance(getattr(epics_c.__class__, vNm), property):
                         logger.error(f"{v_c} EPICS interface has no support for {vNm}")
                     else:
-                        if type(vV) == str and "0b" in vV:
-                            vV = int(vV, base=2)
+                        if type(vV) == str:
+                            if vV.startswith("0b"):
+                                vV = int(vV, base=2)
+                            elif vV.startswith("0x"):
+                                vV = int(vV, base=16)
                         log.debug(f"Channel {chan_id}: setting {v_c}.{vNm} to {vV} with type {type(vV)}")
                         setattr(epics_c, vNm, vV)
 
