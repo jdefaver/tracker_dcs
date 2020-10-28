@@ -1,4 +1,4 @@
-# Tracker DCS Lyon
+# Tracker DCS Louvain
 
 ## Overall Architecture
 
@@ -25,18 +25,16 @@ or a temperature reading as a function of time.
 
 An exception is the PH2ACF interface. A calibration run will generate a large amount of data.
 This data will probably directly be to a MongoDB database, which is more adapted 
-to this kind of data. Still, PH2ACF is piloted via MQTT. 
-
+to this kind of data. Still, PH2ACF is piloted via MQTT.
 The two databases, InfluxDB and MongoDB, are synchronized via a timestamp 
 attached to the data. 
-
-*Never used Telegraf*
+**Note**:this is not implemented yet.
 
 ## Installation 
 
-The architecture is deployed with Docker, and we use docker images built for X86_64 systems. 
+The architecture is deployed with Podman, and we use docker images built for X86_64 systems. 
 Therefore, the tracker DCS stack can run on any computer with this architecture (PC, macs). 
-The software stack is described and supervised by docker-compose. 
+Podman is a drop-in replacement for Docker that allows to run on a machine without administrator rights, and makes it easier to implement stacks of several applications that need to communicate (similarly to docker-compose). In particular, all services simply interact by connecting to localhost.
 
 For an introduction to docker, docker-compose, InfluxDB, and Grafana,
 you could check [this blog article](https://thedatafrog.com/en/articles/docker-influxdb-grafana/)
@@ -48,102 +46,108 @@ git clone https://github.com/cbernet/tracker_dcs.git
 cd tracker_dcs
 ```
 
-Then, install the docker engine and docker-compose for your machine as instructed below. Both tools are available in Docker Desktop.
+Then, [install podman](https://podman.io/getting-started/installation) for your platform. 
 
-### Mac OS
+I suggest to follow the instructions to [setup rootless podman](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md).
 
-[Install Docker Desktop on a mac](https://docs.docker.com/docker-for-mac/install/)
 
-### Linux
+## Creating the stack
 
-[Install the docker engine](https://docs.docker.com/engine/install/) for your platform. 
+First, we create a pod:
 
-Then, I suggest to [install docker-compose with pip](https://docs.docker.com/compose/install/#install-using-pip), the python package manager. Make sure you use python3, and that pip is connected to your version of python3. 
+```
+podman pod create --name tracker_dcs -p 8086 -p 3000 -p 1880 -p 1883
+```
 
-### Windows
+Ports are shared for influxdb (8086), grafana (3000), nodered (1880), and mosquito (1883).
 
-Please note the system requirements before attempting the install, 
-docker desktop cannot be installed on all versions of Windows! You probably need Windows
-64 bit Pro or Education, and to be an administrator of your machine. 
+First build the required image (later could put them on a registry):
 
-[Install Docker Desktop on Windows](https://docs.docker.com/docker-for-windows/install/)
+```
+podman build -t localhost/node-red ./node-red
+podman build -t localhost/pyepics ./trackerdcs
+```
 
+Create the directories which will be bind-mounted:
+```
+mkdir influxdb grafana
+```
+
+Then start influxDB:
+```
+podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_influx -v ./influxdb:/var/lib/influxdb influxdb
+```
+If it's the first time, you might need to create a test DB:
+```
+$ podman exec -it tdcs_influx influx
+> create database testdb
+```
+
+Then, run the containers for telegraf, mosquitto, grafana and node-red:
+
+```
+podman run --pod tracker_dcs -d --init --name telegraf -v ./telegraf.conf:/etc/telegraf/telegraf.conf:ro telegraf
+podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_mosquitto -v mosquitto_data:/mosquitto/data -v mosquitto_log:/mosquitto/log -v ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
+podman run --pod tracker_dcs -d --init --userns=keep-id -u $(id -u) --name tdcs_grafana -v ./grafana:/var/lib/grafana grafana/grafana
+podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_node-red -v ./node-red/data:/data localhost/node-red
+```
+
+We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it runs with a different user) to be able to write to the bind volumes.
+
+SLC/CC7 note (older podman?): it seems the containers should run as root with `-u 0:0` and no `--userns`; also `--init` is not supported there.
 
 ## Running
 
-To start the stack in production mode: 
+### Development from remote
+
+It is possible to run the stack "locally", on a machine outside the UCL network. To make sure the DCS can access the hardware, you'll need to do the following:
+
+- `sshuttle -r server02.fynu.ucl.ac.be 130.104.48.0/24` (redirects all trafic through server02)
+- On the DAQ PC, open a connection and pipe the Julabo serial control through it:
+```
+stty -F /dev/ttyUSB0 4800 crtscts cs7 -parodd
+nc -lkv 8000 > /dev/ttyUSB0 < /dev/ttyUSB0
+```
+
+### Launching the DCS
+
+We can then run the CAEN power supply control backend, specifying the IP of the CAEN mainframe, and the YAML file listing the PS channels and connected modules (see [example](trackerdcs/caen-fsm/example.yml)):
 
 ```
-docker-compose up -d 
+podman run --pod tracker_dcs -d --init -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./trackerdcs/caen-fsm:/usr/src/app/caen-fsm localhost/pyepics python -u caen-fsm/dcs.py --mqtt-host localhost --verbose caen-fsm/example.yml
 ```
 
-## Accessing the services from the host machine
+And the Julabo chiller control backend (add `--remote` at the end when working from outside):
 
-### Grafana and Node-red web GUIs
+```
+podman run --pod tracker_dcs -d --init -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --verbose --mqtt-host localhost --start-mqtt
+```
+
+Note: when running inside the UCL network EPICS can also work with `-e EPICS_CA_AUTO_ADDR_LIST=130.104.48.188` instead of the above.
+
+
+## Accessing the services
+
+Passwords : ask Sebastien
+
+### From the host machine
 
 * grafana: [http://localhost:3000](http://localhost:3000)
 * node-red: [http://localhost:1880](http://localhost:1880)
 
-Passwords : ask Colin
+### From remote
 
+To connect from outside the UCL network to the pod services running on the DAQ PC inside, run in three separate terminals:
 
-## Development mode and unit tests
+- `sshuttle -r server02.fynu.ucl.ac.be 130.104.48.0/24`
+- `ssh -L 1880:localhost:1880 130.104.48.63`
+- `ssh -L 3000:localhost:3000 130.104.48.63`
 
-In development mode, there is a port mapping between the host and the services 
-in all containers in the stack. This allows to access all services from the host
-machine for testing purpose, not only grafana and node-red. 
-
-To start the stack in development mode: 
-
-```
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-```
-
-To run the unit test suite: 
-
-```
-python -m unittest discover trackerdcs/
-```
-
-Please make sure all tests pass before sending a PR to this repository.
-
-## Demonstrator 
-
-The demonstrator features: 
-
-* controllable, dummy high-voltage and low-voltage modules
-* a dummy sensor producing two measurements
-
-To start the demonstrator, do 
-
-```
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.dummy.yml up -d
-```
-
-Then access: 
-
-* the grafana dashboard: [http://localhost:3000](http://localhost:3000)
-* the node-red user interface: [http://localhost:1880](http://localhost:1880/ui)
-
-You should be able to control the HV module, and to see the results in grafana: 
-
-![](doc/simple_ui.png)
-
-
+You can then point your browser to the above addresses.
 
 ## TODO
 
-* think about user interface and access
-* think about global architecture: inputs, outputs, role of mqtt and db, ... 
-* data generator in nodered to mqtt
-* influxDB loader (mqtt listener)
-  * python script? **Telegraf?**
-  * think about topic naming for the loader
-* grafana dashboard to look at the data from influxdb
-  * how to initialize pre-built dashboard?    
-* install nodered modules npm 
-  * ask pavel about the utility of each package
-* test mqtt broker from outside, from inside 
+* share grafana configuration
 * set up a mockup test suite? 
 * security: 
   * grafana: just change password
