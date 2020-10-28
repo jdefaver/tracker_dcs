@@ -3,3 +3,7 @@ chardet==3.0.4
 paho-mqtt==1.5.0
 pkginfo==1.5.0.1
 tqdm==4.30.0
+pyepics
+transitions
+pyserial
+pyyaml
