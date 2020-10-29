@@ -134,6 +134,7 @@ Passwords : ask Sebastien
 
 * grafana: [http://localhost:3000](http://localhost:3000)
 * node-red: [http://localhost:1880](http://localhost:1880)
+* node-red UI: [http://localhost:1880/ui/](http://localhost:1880/ui/)
 
 ### From remote
 
@@ -143,7 +144,11 @@ To connect from outside the UCL network to the pod services running on the DAQ P
 - `ssh -L 1880:localhost:1880 130.104.48.63`
 - `ssh -L 3000:localhost:3000 130.104.48.63`
 
-You can then point your browser to the above addresses.
+You can then access the pages at:
+
+* grafana: [http://130.104.48.63:3000](http://130.104.48.63:3000)
+* node-red: [http://130.104.48.63:1880](http://130.104.48.63:1880)
+* node-red UI: [http://130.104.48.63:1880/ui/](http://130.104.48.63:1880/ui/)
 
 ## TODO
 
