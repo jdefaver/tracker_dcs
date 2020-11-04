@@ -5,9 +5,7 @@
 The system follows a microservice architecture. 
 Each module in this architecture is deployed as a docker container. 
 
-The whole architecture is described and managed as a docker-compose stack: 
-
-![](doc/architecture.png)
+The whole architecture is described and managed using podman.
 
 **DISCLAIMER: this package is under active development, and the stack architecture
 is not final.**
@@ -16,8 +14,6 @@ Users interact with the architecture through a gateway with two modules:
 
 * a grafana web server: monitoring dashboards
 * a node-red web server: labview equivalent for the slow control and logic
-
-The connection to these modules is secured with TLS. 
 
 In the stack, sensors, devices, and user interfaces mostly communicate with the MQTT protocol, as they
 only need to send and receive simple information, like a power-on instruction, 
@@ -42,7 +38,7 @@ you could check [this blog article](https://thedatafrog.com/en/articles/docker-i
 To install, first clone this repository to your machine, and go inside: 
 
 ```
-git clone https://github.com/cbernet/tracker_dcs.git
+git clone https://github.com/swertz/tracker_dcs.git -b podman_epics
 cd tracker_dcs
 ```
 
@@ -96,8 +92,9 @@ podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_node-red -v 
 We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it runs with a different user) to be able to write to the bind volumes.
 
 **Note**:
-    - On SLC/CC7 note the containers should with `-u 0:0` instead of `--userns`
-    - With the old version of podman on CC7, `--init` is not supported
+
+- On SLC/CC7 note the containers should with `-u 0:0` instead of `--userns`
+- With the old version of podman on CC7, `--init` is not supported
 
 ### Initialiazing the DB
 
@@ -144,7 +141,7 @@ podman run --pod tracker_dcs -d --init --name tdcs_caen -e EPICS_CA_NAME_SERVERS
 And the Julabo chiller control backend (add `--remote` at the end when working from outside):
 
 ```
-podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --mqtt-host localhost --start-mqtt
+podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --mqtt-host localhost --start-mqtt --remote
 ```
 
 Note: when running inside the UCL network EPICS can also work with `-e EPICS_CA_AUTO_ADDR_LIST=130.104.48.188` instead of the above.
