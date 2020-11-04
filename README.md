@@ -86,7 +86,7 @@ $ podman exec -it tdcs_influx influx
 Then, run the containers for telegraf, mosquitto, grafana and node-red:
 
 ```
-podman run --pod tracker_dcs -d --init --name telegraf -v ./telegraf.conf:/etc/telegraf/telegraf.conf:ro telegraf
+podman run --pod tracker_dcs -d --init --name tdcs_telegraf -v ./telegraf.conf:/etc/telegraf/telegraf.conf:ro telegraf
 podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_mosquitto -v mosquitto_data:/mosquitto/data -v mosquitto_log:/mosquitto/log -v ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
 podman run --pod tracker_dcs -d --init --userns=keep-id -u $(id -u) --name tdcs_grafana -v ./grafana:/var/lib/grafana grafana/grafana
 podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_node-red -v ./node-red/data:/data localhost/node-red
@@ -94,7 +94,9 @@ podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_node-red -v 
 
 We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it runs with a different user) to be able to write to the bind volumes.
 
-SLC/CC7 note (older podman?): it seems the containers should run as root with `-u 0:0` and no `--userns`; also `--init` is not supported there.
+**Note**:
+    - On SLC/CC7 note the containers should with `-u 0:0` instead of `--userns`
+    - With the old version of podman on CC7, `--init` is not supported
 
 ## Running
 
@@ -114,13 +116,13 @@ nc -lkv 8000 > /dev/ttyUSB0 < /dev/ttyUSB0
 We can then run the CAEN power supply control backend, specifying the IP of the CAEN mainframe, and the YAML file listing the PS channels and connected modules (see [example](trackerdcs/caen-fsm/example.yml)):
 
 ```
-podman run --pod tracker_dcs -d --init -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./trackerdcs/caen-fsm:/usr/src/app/caen-fsm localhost/pyepics python -u caen-fsm/dcs.py --mqtt-host localhost --verbose caen-fsm/example.yml
+podman run --pod tracker_dcs -d --init --name tdcs_caen -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./trackerdcs/caen-fsm:/usr/src/app/caen-fsm localhost/pyepics python -u caen-fsm/dcs.py --mqtt-host localhost caen-fsm/example.yml
 ```
 
 And the Julabo chiller control backend (add `--remote` at the end when working from outside):
 
 ```
-podman run --pod tracker_dcs -d --init -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --verbose --mqtt-host localhost --start-mqtt
+podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --mqtt-host localhost --start-mqtt
 ```
 
 Note: when running inside the UCL network EPICS can also work with `-e EPICS_CA_AUTO_ADDR_LIST=130.104.48.188` instead of the above.
@@ -138,17 +140,13 @@ Passwords : ask Sebastien
 
 ### From remote
 
-To connect from outside the UCL network to the pod services running on the DAQ PC inside, run in three separate terminals:
-
-- `sshuttle -r server02.fynu.ucl.ac.be 130.104.48.0/24`
-- `ssh -L 1880:localhost:1880 130.104.48.63`
-- `ssh -L 3000:localhost:3000 130.104.48.63`
+To connect from outside the UCL network to the pod services running on the DAQ PC inside, run `sshuttle -r server02.fynu.ucl.ac.be 130.104.48.0/24`.
 
 You can then access the pages at:
 
 * grafana: [http://130.104.48.63:3000](http://130.104.48.63:3000)
-* node-red: [http://130.104.48.63:1880](http://130.104.48.63:1880)
-* node-red UI: [http://130.104.48.63:1880/ui/](http://130.104.48.63:1880/ui/)
+* node-red builder: [http://130.104.48.63:1880](http://130.104.48.63:1880)
+* node-red dashboard: [http://130.104.48.63:1880/ui/](http://130.104.48.63:1880/ui/)
 
 ## TODO
 
