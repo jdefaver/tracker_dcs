@@ -1,0 +1,231 @@
+# Generation of Kubernetes YAML is still under development!
+#
+# Save the output of this file and use kubectl create -f to import
+# it into Kubernetes.
+#
+# Created with podman-2.1.1
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2020-11-04T14:32:40Z"
+  labels:
+    app: trackerdcs
+  name: tracker_dcs
+spec:
+  containers:
+  - command:
+    - influxd
+    env:
+    - name: PATH
+      value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    - name: TERM
+      value: xterm
+    - name: container
+      value: podman
+    - name: containers
+      value: podman
+    - name: INFLUXDB_VERSION
+      value: 1.8.1
+    - name: HOSTNAME
+      value: tracker_dcs
+    image: docker.io/library/influxdb:latest
+    name: tdcsinflux
+    ports:
+    - containerPort: 8086
+      hostPort: 8086
+      protocol: TCP
+    - containerPort: 3000
+      hostPort: 3000
+      protocol: TCP
+    - containerPort: 1880
+      hostPort: 1880
+      protocol: TCP
+    - containerPort: 1883
+      hostPort: 1883
+      protocol: TCP
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsGroup: 0
+      runAsUser: 0
+      seLinuxOptions: {}
+    volumeMounts:
+    - mountPath: /var/lib/influxdb
+      name: home-swertz-tracker_dcs-influxdb
+    workingDir: /
+  - command:
+    - /usr/sbin/mosquitto
+    - -c
+    - /mosquitto/config/mosquitto.conf
+    env:
+    - name: PATH
+      value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    - name: TERM
+      value: xterm
+    - name: container
+      value: podman
+    - name: GPG_KEYS
+      value: A0D6EEA1DCAE49A635A3B2F0779B22DFB3E717B7
+    - name: LWS_VERSION
+      value: 2.4.2
+    - name: containers
+      value: podman
+    - name: VERSION
+      value: 1.6.12
+    - name: DOWNLOAD_SHA256
+      value: 548d73d19fb787dd0530334e398fd256ef3a581181678488a741a995c4f007fb
+    - name: HOSTNAME
+      value: tracker_dcs
+    image: docker.io/library/eclipse-mosquitto:latest
+    name: tdcsmosquitto
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsGroup: 0
+      runAsUser: 0
+      seLinuxOptions: {}
+    volumeMounts:
+    - mountPath: /mosquitto/config/mosquitto.conf
+      name: home-swertz-tracker_dcs-mosquitto-mosquitto.conf
+    workingDir: /
+  - command:
+    - npm
+    - start
+    env:
+    - name: PATH
+      value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    - name: TERM
+      value: xterm
+    - name: container
+      value: podman
+    - name: NODE_VERSION
+      value: 10.22.0
+    - name: YARN_VERSION
+      value: 1.22.4
+    - name: NODE_RED_VERSION
+      value: v1.1.3
+    - name: NODE_PATH
+      value: /usr/src/node-red/node_modules:/data/node_modules
+    - name: FLOWS
+      value: flows.json
+    - name: containers
+      value: podman
+    - name: HOSTNAME
+      value: tracker_dcs
+    image: localhost/node-red:latest
+    name: tdcsnode-red
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsGroup: 0
+      runAsUser: 0
+      seLinuxOptions: {}
+    volumeMounts:
+    - mountPath: /data
+      name: home-swertz-tracker_dcs-node-red-data
+    workingDir: /usr/src/node-red
+  - env:
+    - name: PATH
+      value: /usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    - name: TERM
+      value: xterm
+    - name: container
+      value: podman
+    - name: GF_PATHS_CONFIG
+      value: /etc/grafana/grafana.ini
+    - name: GF_PATHS_HOME
+      value: /usr/share/grafana
+    - name: containers
+      value: podman
+    - name: GF_PATHS_PLUGINS
+      value: /var/lib/grafana/plugins
+    - name: GF_PATHS_PROVISIONING
+      value: /etc/grafana/provisioning
+    - name: GF_PATHS_DATA
+      value: /var/lib/grafana
+    - name: GF_PATHS_LOGS
+      value: /var/log/grafana
+    - name: HOSTNAME
+      value: tracker_dcs
+    image: docker.io/grafana/grafana:latest
+    name: tdcsgrafana
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsGroup: 0
+      runAsUser: 0
+      seLinuxOptions: {}
+    volumeMounts:
+    - mountPath: /var/lib/grafana
+      name: home-swertz-tracker_dcs-grafana
+    workingDir: /usr/share/grafana
+  - command:
+    - telegraf
+    env:
+    - name: PATH
+      value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    - name: TERM
+      value: xterm
+    - name: container
+      value: podman
+    - name: containers
+      value: podman
+    - name: TELEGRAF_VERSION
+      value: 1.15.2
+    - name: HOSTNAME
+      value: tracker_dcs
+    image: docker.io/library/telegraf:latest
+    name: tdcstelegraf
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: true
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      seLinuxOptions: {}
+    volumeMounts:
+    - mountPath: /etc/telegraf/telegraf.conf
+      name: home-swertz-tracker_dcs-telegraf.conf
+      readOnly: true
+    workingDir: /
+  restartPolicy: Never
+  volumes:
+  - hostPath:
+      path: /home/swertz/tracker_dcs/telegraf.conf
+      type: File
+    name: home-swertz-tracker_dcs-telegraf.conf
+  - hostPath:
+      path: /home/swertz/tracker_dcs/influxdb
+      type: Directory
+    name: home-swertz-tracker_dcs-influxdb
+  - hostPath:
+      path: /home/swertz/tracker_dcs/mosquitto/mosquitto.conf
+      type: File
+    name: home-swertz-tracker_dcs-mosquitto-mosquitto.conf
+  - hostPath:
+      path: /home/swertz/tracker_dcs/node-red/data
+      type: Directory
+    name: home-swertz-tracker_dcs-node-red-data
+  - hostPath:
+      path: /home/swertz/tracker_dcs/grafana
+      type: Directory
+    name: home-swertz-tracker_dcs-grafana
+status: {}
+---
+metadata:
+  creationTimestamp: null
+spec: {}
+status:
+  loadBalancer: {}
