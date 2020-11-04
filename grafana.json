@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1603988117438,
+  "iteration": 1604501394811,
   "links": [],
   "panels": [
     {
@@ -57,8 +57,11 @@
       "lines": true,
       "linewidth": 1,
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
-      "pluginVersion": "7.1.5",
+      "pluginVersion": "7.3.1",
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
@@ -70,11 +73,17 @@
       "steppedLine": true,
       "targets": [
         {
-          "alias": "",
+          "alias": "$col  $tag_id ($tag_module)",
           "groupBy": [
             {
               "params": [
-                "name"
+                "id"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "module"
               ],
               "type": "tag"
             }
@@ -98,18 +107,24 @@
           ],
           "tags": [
             {
-              "key": "name",
+              "key": "id",
               "operator": "=~",
               "value": "/^$Channel$/"
             }
           ]
         },
         {
-          "alias": "",
+          "alias": "$col  $tag_id ($tag_module)",
           "groupBy": [
             {
               "params": [
-                "name"
+                "id"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "module"
               ],
               "type": "tag"
             }
@@ -134,7 +149,7 @@
           ],
           "tags": [
             {
-              "key": "name",
+              "key": "id",
               "operator": "=~",
               "value": "/^$Channel$/"
             }
@@ -195,7 +210,7 @@
         "overrides": []
       },
       "fill": 1,
-      "fillGradient": 0,
+      "fillGradient": 1,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -216,10 +231,13 @@
       "lines": true,
       "linewidth": 1,
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
-      "pluginVersion": "7.1.5",
-      "pointradius": 2,
-      "points": false,
+      "pluginVersion": "7.3.1",
+      "pointradius": 1,
+      "points": true,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
@@ -231,7 +249,7 @@
           "groupBy": [
             {
               "params": [
-                "10s"
+                "1m"
               ],
               "type": "time"
             },
@@ -268,7 +286,7 @@
           "groupBy": [
             {
               "params": [
-                "10s"
+                "1m"
               ],
               "type": "time"
             },
@@ -355,7 +373,7 @@
         "overrides": []
       },
       "fill": 1,
-      "fillGradient": 0,
+      "fillGradient": 1,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -376,10 +394,13 @@
       "lines": true,
       "linewidth": 1,
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
-      "pluginVersion": "7.1.5",
-      "pointradius": 2,
-      "points": false,
+      "pluginVersion": "7.3.1",
+      "pointradius": 1,
+      "points": true,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
@@ -391,7 +412,7 @@
           "groupBy": [
             {
               "params": [
-                "10s"
+                "1m"
               ],
               "type": "time"
             },
@@ -499,8 +520,11 @@
       "lines": true,
       "linewidth": 1,
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
-      "pluginVersion": "7.1.5",
+      "pluginVersion": "7.3.1",
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
@@ -510,11 +534,17 @@
       "steppedLine": true,
       "targets": [
         {
-          "alias": "",
+          "alias": "$col  $tag_id ($tag_module)",
           "groupBy": [
             {
               "params": [
-                "name"
+                "module"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "id"
               ],
               "type": "tag"
             }
@@ -538,18 +568,24 @@
           ],
           "tags": [
             {
-              "key": "name",
+              "key": "id",
               "operator": "=~",
               "value": "/^$Channel$/"
             }
           ]
         },
         {
-          "alias": "",
+          "alias": "$col  $tag_id ($tag_module)",
           "groupBy": [
             {
               "params": [
-                "name"
+                "module"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "id"
               ],
               "type": "tag"
             }
@@ -573,7 +609,7 @@
           ],
           "tags": [
             {
-              "key": "name",
+              "key": "id",
               "operator": "=~",
               "value": "/^$Channel$/"
             }
@@ -600,7 +636,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "volt",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -634,7 +670,7 @@
         "overrides": []
       },
       "fill": 1,
-      "fillGradient": 0,
+      "fillGradient": 1,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -655,10 +691,13 @@
       "lines": true,
       "linewidth": 1,
       "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
       "percentage": false,
-      "pluginVersion": "7.1.5",
-      "pointradius": 2,
-      "points": false,
+      "pluginVersion": "7.3.1",
+      "pointradius": 1,
+      "points": true,
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
@@ -670,7 +709,7 @@
           "groupBy": [
             {
               "params": [
-                "10s"
+                "1m"
               ],
               "type": "time"
             },
@@ -743,6 +782,126 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "hiddenSeries": false,
+      "id": 11,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.1",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Julabo internal bath",
+          "groupBy": [
+            {
+              "params": [
+                "1m"
+              ],
+              "type": "time"
+            }
+          ],
+          "measurement": "chiller",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "internal_temp"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Chiller temperatures",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "celsius",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
   "refresh": "5s",
@@ -756,14 +915,19 @@
         "current": {
           "selected": true,
           "text": [
-            "None"
+            "0",
+            "1",
+            "2"
           ],
           "value": [
-            ""
+            "0",
+            "1",
+            "2"
           ]
         },
         "datasource": "InfluxDB",
         "definition": "SHOW TAG VALUES ON \"testdb\" FROM \"channels\" WITH KEY = \"id\"",
+        "error": null,
         "hide": 0,
         "includeAll": false,
         "label": null,
@@ -784,7 +948,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -796,5 +960,5 @@
   "timezone": "",
   "title": "tracker_dcs_testdb",
   "uid": "4dnrhYHMk",
-  "version": 5
+  "version": 17
 }

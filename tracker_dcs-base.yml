@@ -118,7 +118,7 @@ spec:
       value: podman
     - name: HOSTNAME
       value: tracker_dcs
-    image: localhost/node-red:latest
+    image: localhost/node-red
     name: tdcsnode-red
     resources: {}
     securityContext:

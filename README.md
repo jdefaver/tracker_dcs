@@ -48,10 +48,25 @@ cd tracker_dcs
 
 Then, [install podman](https://podman.io/getting-started/installation) for your platform. 
 
-I suggest to follow the instructions to [setup rootless podman](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md).
+Following  the instructions to [setup rootless podman](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md) might be useful in some cases...
 
 
 ## Creating the stack
+
+First create the directories which will be bind-mounted:
+```
+mkdir influxdb grafana
+```
+
+### Using kube file
+
+This is experimental:
+
+```
+podman play kube tracker_dcs-base.yml
+```
+
+### Manually
 
 First, we create a pod:
 
@@ -68,24 +83,10 @@ podman build -t localhost/node-red ./node-red
 podman build -t localhost/pyepics ./trackerdcs
 ```
 
-Create the directories which will be bind-mounted:
-```
-mkdir influxdb grafana
-```
+Then, run the containers for influxDB,telegraf, mosquitto, grafana and node-red:
 
-Then start influxDB:
 ```
 podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_influx -v ./influxdb:/var/lib/influxdb influxdb
-```
-If it's the first time, you might need to create a test DB:
-```
-$ podman exec -it tdcs_influx influx
-> create database testdb
-```
-
-Then, run the containers for telegraf, mosquitto, grafana and node-red:
-
-```
 podman run --pod tracker_dcs -d --init --name tdcs_telegraf -v ./telegraf.conf:/etc/telegraf/telegraf.conf:ro telegraf
 podman run --pod tracker_dcs -d --init --userns=keep-id --name tdcs_mosquitto -v mosquitto_data:/mosquitto/data -v mosquitto_log:/mosquitto/log -v ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto
 podman run --pod tracker_dcs -d --init --userns=keep-id -u $(id -u) --name tdcs_grafana -v ./grafana:/var/lib/grafana grafana/grafana
@@ -97,6 +98,27 @@ We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it r
 **Note**:
     - On SLC/CC7 note the containers should with `-u 0:0` instead of `--userns`
     - With the old version of podman on CC7, `--init` is not supported
+
+### Initialiazing the DB
+
+If it's the first time, you will need to create a test DB:
+```
+$ podman exec -it tdcs_influx influx
+> create database testdb
+```
+
+### Configuring grafana
+
+First go to `Configuration > Data sources`, click `Add data source`, select `InfluxDB`, set:
+- name: `InfluxDB`
+- URL: `http://localhost:8086`
+- Database: `testdb`
+
+Then go to `Dashboards > Manage`, click on `Import`, then `Upload JSON file` and select the file `grafana.json` from this repository.
+
+When making changes to the dashboard, you'll need to re-export as JSON by going to `Dashboard settings` (from within the dashboard), `JSON model`. There seems to be no good way to save the user credentials and database settings...
+
+TODO: credentials?
 
 ## Running
 
