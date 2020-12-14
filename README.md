@@ -93,7 +93,7 @@ We use `--userns=keep-id` and (`-u $(id -u)` for grafana because by default it r
 
 **Note**:
 
-- On SLC/CC7 note the containers should with `-u 0:0` instead of `--userns`
+- On SLC/CC7 note the containers should use `-u 0:0` instead of `--userns`
 - With the old version of podman on CC7, `--init` is not supported
 
 ### Initialiazing the DB
@@ -138,8 +138,11 @@ We can then run the CAEN power supply control backend, specifying the IP of the 
 podman run --pod tracker_dcs -d --init --name tdcs_caen -e EPICS_CA_NAME_SERVERS=130.104.48.188 -e EPICS_CA_AUTO_ADDR_LIST=NO -v ./trackerdcs/caen-fsm:/usr/src/app/caen-fsm localhost/pyepics python -u caen-fsm/dcs.py --mqtt-host localhost caen-fsm/example.yml
 ```
 
-And the Julabo chiller control backend (add `--remote` at the end when working from outside):
-
+And the Julabo chiller control backend. If running on the PC connected to the serial adapter, run:
+```
+podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm --device /dev/ttyUSB0:/dev/ttyUSB0:rw localhost/pyepics python -u julabo-fsm/julabo_serial.py --mqtt-host localhost --start-mqtt
+```
+If running on a remote PC, run:
 ```
 podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --mqtt-host localhost --start-mqtt --remote
 ```
