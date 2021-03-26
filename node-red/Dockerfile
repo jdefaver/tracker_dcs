@@ -11,7 +11,8 @@ RUN npm install --only=production \
   node-red-contrib-increment \
   node-red-contrib-simple-gate \
   node-red-contrib-state \
-  node-red-contrib-ui-led
+  node-red-contrib-ui-led \
+  node-red-node-serialport
   #epics \
   #node-red-contrib-epics
   
