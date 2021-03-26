@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1604501394811,
+  "iteration": 1616773868310,
   "links": [],
   "panels": [
     {
@@ -249,12 +249,6 @@
           "groupBy": [
             {
               "params": [
-                "1m"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
                 "sensor"
               ],
               "type": "tag"
@@ -262,7 +256,7 @@
           ],
           "measurement": "sensors",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -272,10 +266,6 @@
                   "BME_temp"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
               }
             ]
           ],
@@ -286,20 +276,17 @@
           "groupBy": [
             {
               "params": [
-                "1m"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
                 "sensor"
               ],
               "type": "tag"
             }
           ],
+          "hide": false,
           "measurement": "sensors",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "$rp",
+          "query": "SELECT \"DS_temp\" FROM $rp.\"sensors\" WHERE $timeFilter GROUP BY \"sensor\"",
+          "rawQuery": false,
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -309,10 +296,36 @@
                   "DS_temp"
                 ],
                 "type": "field"
-              },
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "SCD30 $tag_sensor",
+          "groupBy": [
+            {
+              "params": [
+                "sensor"
+              ],
+              "type": "tag"
+            }
+          ],
+          "hide": false,
+          "measurement": "sensors",
+          "orderByTime": "ASC",
+          "policy": "$rp",
+          "query": "SELECT \"DS_temp\" FROM $rp.\"sensors\" WHERE $timeFilter GROUP BY \"sensor\"",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
               {
-                "params": [],
-                "type": "mean"
+                "params": [
+                  "SCD30_temp"
+                ],
+                "type": "field"
               }
             ]
           ],
@@ -408,14 +421,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$tag_sensor",
+          "alias": "$tag_sensor BMI",
           "groupBy": [
-            {
-              "params": [
-                "1m"
-              ],
-              "type": "time"
-            },
             {
               "params": [
                 "sensor"
@@ -425,7 +432,7 @@
           ],
           "measurement": "sensors",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "$rp",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -435,10 +442,35 @@
                   "BMI_humi"
                 ],
                 "type": "field"
-              },
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "$tag_sensor SCD30",
+          "groupBy": [
+            {
+              "params": [
+                "sensor"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "sensors",
+          "orderByTime": "ASC",
+          "policy": "$rp",
+          "query": "SELECT \"SCD30_humi\" FROM \"$rp\".\"sensors\" WHERE $timeFilter GROUP BY \"sensor\"",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
               {
-                "params": [],
-                "type": "mean"
+                "params": [
+                  "SCD30_humi"
+                ],
+                "type": "field"
               }
             ]
           ],
@@ -705,14 +737,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$tag_sensor",
+          "alias": "$tag_sensor (CCS)",
           "groupBy": [
-            {
-              "params": [
-                "1m"
-              ],
-              "type": "time"
-            },
             {
               "params": [
                 "sensor"
@@ -722,7 +748,9 @@
           ],
           "measurement": "sensors",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "$rp",
+          "query": "SELECT \"CCS_co2\" FROM \"autogen\".\"sensors\", \"one_hour\".\"sensors\" WHERE $timeFilter GROUP BY \"sensor\"",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -732,10 +760,35 @@
                   "CCS_co2"
                 ],
                 "type": "field"
-              },
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "$tag_sensor (SCD30)",
+          "groupBy": [
+            {
+              "params": [
+                "sensor"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "sensors",
+          "orderByTime": "ASC",
+          "policy": "$rp",
+          "query": "SELECT \"SCD30_co2\" FROM \"sensors\", \"one_hour\".\"sensors\" WHERE $timeFilter GROUP BY \"sensor\"",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
               {
-                "params": [],
-                "type": "mean"
+                "params": [
+                  "SCD30_co2"
+                ],
+                "type": "field"
               }
             ]
           ],
@@ -842,7 +895,9 @@
           ],
           "measurement": "chiller",
           "orderByTime": "ASC",
-          "policy": "autogen",
+          "policy": "$rp",
+          "query": "SELECT mean(\"internal_temp\") FROM \"$rp\".\"chiller\" WHERE $timeFilter GROUP BY time(10s)",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -904,7 +959,7 @@
       }
     }
   ],
-  "refresh": "5s",
+  "refresh": false,
   "schemaVersion": 26,
   "style": "dark",
   "tags": [],
@@ -926,7 +981,7 @@
           ]
         },
         "datasource": "InfluxDB",
-        "definition": "SHOW TAG VALUES ON \"testdb\" FROM \"channels\" WITH KEY = \"id\"",
+        "definition": "",
         "error": null,
         "hide": 0,
         "includeAll": false,
@@ -934,7 +989,7 @@
         "multi": true,
         "name": "Channel",
         "options": [],
-        "query": "SHOW TAG VALUES ON \"testdb\" FROM \"channels\" WITH KEY = \"id\"",
+        "query": "SHOW TAG VALUES ON \"trackerdcs\" FROM \"channels\" WITH KEY = \"id\"",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -944,6 +999,36 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "autogen",
+          "value": "autogen"
+        },
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": "Retention policy",
+        "multi": false,
+        "name": "rp",
+        "options": [
+          {
+            "selected": true,
+            "text": "autogen",
+            "value": "autogen"
+          },
+          {
+            "selected": false,
+            "text": "5min_avg",
+            "value": "5min_avg"
+          }
+        ],
+        "query": "autogen,5min_avg",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
       }
     ]
   },
@@ -958,7 +1043,7 @@
     ]
   },
   "timezone": "",
-  "title": "tracker_dcs_testdb",
+  "title": "trackerdcs",
   "uid": "4dnrhYHMk",
-  "version": 17
+  "version": 39
 }
