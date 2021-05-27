@@ -7,3 +7,4 @@ pyepics
 transitions
 pyserial
 pyyaml
+pymodbus
