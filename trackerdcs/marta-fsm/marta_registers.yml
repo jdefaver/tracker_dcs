@@ -1,0 +1,408 @@
+# SENSORS
+PT01_R452A:
+    type: float32
+    address: 100
+PT03_R452A:
+    type: float32
+    address: 102
+PT04_R452A:
+    type: float32
+    address: 104
+PT01_CO2:
+    type: float32
+    address: 106
+PT02_CO2:
+    type: float32
+    address: 108
+PT03_CO2:
+    type: float32
+    address: 110
+PT04_CO2:
+    type: float32
+    address: 112
+PT05_CO2:
+    type: float32
+    address: 114
+PT06_CO2:
+    type: float32
+    address: 116
+TT01_R452A:
+    type: float32
+    address: 118
+TT02_R452A:
+    type: float32
+    address: 120
+TT03_R452A:
+    type: float32
+    address: 122
+TT04_R452A:
+    type: float32
+    address: 124
+TT01_CO2:
+    type: float32
+    address: 126
+TT02_CO2:
+    type: float32
+    address: 128
+TT03_CO2:
+    type: float32
+    address: 130
+TT04_CO2:
+    type: float32
+    address: 132
+TT05_CO2:
+    type: float32
+    address: 134
+TT06_CO2:
+    type: float32
+    address: 136
+TT07_CO2:
+    type: float32
+    address: 138
+FT01_CO2:
+    type: float32
+    address: 140
+
+# CALCULATED VALUES
+SH01_R452A_calc:
+    type: float32
+    address: 142
+SH03_R452A_calc:
+    type: float32
+    address: 144
+ST01_R452A_calc:
+    type: float32
+    address: 146
+ST03_R452A_calc:
+    type: float32
+    address: 148
+ST01_CO2_calc:
+    type: float32
+    address: 150
+ST02_CO2_calc:
+    type: float32
+    address: 152
+ST03_CO2_calc:
+    type: float32
+    address: 154
+ST04_CO2_calc:
+    type: float32
+    address: 156
+ST05_CO2_calc:
+    type: float32
+    address: 158
+ST06_CO2_calc:
+    type: float32
+    address: 160
+SC01_CO2_calc:
+    type: float32
+    address: 162
+SC02_CO2_calc:
+    type: float32
+    address: 164
+SC03_CO2_calc:
+    type: float32
+    address: 166
+SC04_CO2_calc:
+    type: float32
+    address: 168
+SC05_CO2_calc:
+    type: float32
+    address: 170
+SC06_CO2_calc:
+    type: float32
+    address: 172
+DP01_CO2_calc:
+    type: float32
+    address: 174
+DP02_CO2_calc:
+    type: float32
+    address: 176
+DP03_CO2_calc:
+    type: float32
+    address: 178
+DP04_CO2_calc:
+    type: float32
+    address: 180
+DT02_CO2_calc:
+    type: float32
+    address: 182
+DT03_CO2_calc:
+    type: float32
+    address: 184
+DP_EV3C_CO2_calc:
+    type: float32
+    address: 186
+SC01_CO2_Start_calc:
+    type: float32
+    address: 190
+
+# OPERATIONAL PARAMETERS
+EV1_valve_pos:
+    type: float32
+    address: 192
+EV2_valve_pos:
+    type: float32
+    address: 194
+EV3_valve_pos:
+    type: float32
+    address: 196
+EV3C_valve_pos:
+    type: float32
+    address: 198
+LP_speed:
+    type: float32
+    address: 200
+EH_power:
+    type: float32
+    address: 202
+temperature_setpoint:
+    type: float32
+    address: 204
+speed_setpoint:
+    type: float32
+    address: 206
+flow_setpoint:
+    type: float32
+    address: 208
+TC04_TSP:
+    type: float32
+    address: 210
+
+# CHILLER ALARMS
+ChTT_IOErr_FS:
+    address: 300
+    bit: 0
+    type: bool
+ChPT_IOErr_FS:
+    address: 300
+    bit: 1
+    type: bool
+PS_HP_FS:
+    address: 300
+    bit: 2
+    type: bool
+PS_LP_FS:
+    address: 300
+    bit: 3
+    type: bool
+CP_HP_FS:
+    address: 300
+    bit: 4
+    type: bool
+CP_HP_W:
+    address: 300
+    bit: 5
+    type: bool
+CP_LP_FS:
+    address: 300
+    bit: 6
+    type: bool
+CP_LP_W:
+    address: 300
+    bit: 7
+    type: bool
+SH03_R452A_FS:
+    address: 300
+    bit: 8
+    type: bool
+SH03_R452A_W1:
+    address: 300
+    bit: 9
+    type: bool
+TT03_R452A_HT_W1:
+    address: 300
+    bit: 10
+    type: bool
+TT03_R452A_LT_FS1:
+    address: 300
+    bit: 11
+    type: bool
+TT03_R452A_LT_W1:
+    address: 300
+    bit: 12
+    type: bool
+ST01_R452A_TS1:
+    address: 300
+    bit: 13
+    type: bool
+ST01_R452A_W1:
+    address: 300
+    bit: 14
+    type: bool
+TT04_R452A_HT_FS1:
+    address: 300
+    bit: 15
+    type: bool
+TT04_R452A_HT_W1:
+    address: 301
+    bit: 0
+    type: bool
+EV1_CEr_FS1:
+    address: 301
+    bit: 1
+    type: bool
+EV2_CEr_FS1:
+    address: 301
+    bit: 2
+    type: bool
+EV3_CEr_FS2:
+    address: 301
+    bit: 3
+    type: bool
+CP_CB_FS2:
+    address: 301
+    bit: 4
+    type: bool
+V_CB_FS2:
+    address: 301
+    bit: 5
+    type: bool
+UPS_MODE_FS2:
+    address: 301
+    bit: 6
+    type: bool
+EB_FS2:
+    address: 301
+    bit: 7
+    type: bool
+CP_Cnt_FS2:
+    address: 301
+    bit: 8
+    type: bool
+
+# CO2 ALARMS
+TT_IOErr_FS:
+    address: 302
+    bit: 0
+    type: bool
+PT_IOErr_FS:
+    address: 302
+    bit: 1
+    type: bool
+DP01_CO2_FS:
+    address: 302
+    bit: 2
+    type: bool
+DP01_CO2_W:
+    address: 302
+    bit: 3
+    type: bool
+DP02_CO2_FS:
+    address: 302
+    bit: 4
+    type: bool
+DP02_CO2_W:
+    address: 302
+    bit: 5
+    type: bool
+DP03_CO2_LP_FS:
+    address: 302
+    bit: 6
+    type: bool
+DP03_CO2_LP_W:
+    address: 302
+    bit: 7
+    type: bool
+DP03_CO2_HP_FS:
+    address: 302
+    bit: 8
+    type: bool
+DP03_CO2_HP_W:
+    address: 302
+    bit: 9
+    type: bool
+DT03_CO2_HT_FS:
+    address: 302
+    bit: 10
+    type: bool
+DT03_CO2_HT_W:
+    address: 302
+    bit: 11
+    type: bool
+PT02_CO2_HP_FS:
+    address: 302
+    bit: 12
+    type: bool
+SC01_CO2_FS:
+    address: 302
+    bit: 13
+    type: bool
+SC01_CO2_W:
+    address: 302
+    bit: 14
+    type: bool
+TT01_CO2_LT_FS:
+    address: 302
+    bit: 15
+    type: bool
+PT04_CO2_HP_FS:
+    address: 303
+    bit: 0
+    type: bool
+PT04_CO2_HP_W:
+    address: 303
+    bit: 1
+    type: bool
+TT04_CO2_HT_FS:
+    address: 303
+    bit: 2
+    type: bool
+TT04_CO2_HT_TS:
+    address: 303
+    bit: 3
+    type: bool
+TT04_CO2_HT_W:
+    address: 303
+    bit: 4
+    type: bool
+EV3C_CEr_FS:
+    address: 303
+    bit: 5
+    type: bool
+EH_CB_FS:
+    address: 303
+    bit: 6
+    type: bool
+LP_CB_FS:
+    address: 303
+    bit: 7
+    type: bool
+
+# SET PARAMETERS
+set_start_chiller:
+    address: 305
+    bit: 0
+    type: bool
+    input: true
+set_start_co2:
+    address: 305
+    bit: 1
+    type: bool
+    input: true
+set_flow_active:
+    address: 305
+    bit: 2
+    type: bool
+    input: true
+set_alarm_reset:
+    address: 305
+    bit: 3
+    type: bool
+    input: true
+set_temperature_setpoint:
+    address: 310
+    type: float32
+    input: true
+set_speed_setpoint:
+    address: 312
+    type: float32
+    input: true
+set_flow_setpoint:
+    address: 314
+    type: float32
+    input: true
+
+# STATUS
+status:
+    address: 320
