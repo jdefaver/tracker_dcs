@@ -41,9 +41,7 @@ class ModbusSetBool(ModbusBool, ModbusSetParam):
     def write(self, value):
         value = bool(value)
         curr_values = super().read()
-        print(f"Current values: {bin(curr_values)}")
         new_values = (curr_values & ~(0b1 << self.bit)) | (value << self.bit)
-        print(f"New values: {bin(new_values)}")
         super().write(new_values)
 
 class ModbusInt(ModbusMetric):
@@ -63,6 +61,22 @@ class ModbusSetFloat32(ModbusFloat32, ModbusSetParam):
         buf.add_32bit_float(value)
         regs = buf.to_registers()
         super().write(regs)
+
+# FIXME find a better way of doing that
+class DeadbandWrapper:
+    def __init__(self, metric, deadband):
+        self.prev_value = None
+        self.metric = metric
+        self.deadband = deadband
+        if hasattr(metric, "write"):
+            self.write = metric.write
+    def read(self, force=False):
+        new_value = self.metric.read()
+        if force or self.prev_value is None or abs(new_value - self.prev_value) > self.deadband:
+            self.prev_value = new_value
+            return new_value
+        else:
+            return None
 
 class ModbusRegisterManager:
     def __init__(self, client, unit=1):
@@ -102,14 +116,14 @@ class ModbusRegisterManager:
         for i,addr in enumerate(range(baseAddr, baseAddr + len(values))):
             self.registers[addr] = values[i]
 
-    def makeProxy(self, name, address, type="int", bit=None, input=False, **kwargs):
+    def makeProxy(self, name, address, type="int", input=False, deadband=None, **kwargs):
         if type == "int":
             proxy = ModbusInt(name, address, manager=self, **kwargs)
         elif type == "bool":
             if input:
-                proxy = ModbusSetBool(name, address, manager=self, bit=bit, **kwargs)
+                proxy = ModbusSetBool(name, address, manager=self, **kwargs)
             else:
-                proxy = ModbusBool(name, address, manager=self, bit=bit, **kwargs)
+                proxy = ModbusBool(name, address, manager=self, **kwargs)
         elif type == "float32":
             if input:
                 proxy = ModbusSetFloat32(name, address, manager=self, **kwargs)
@@ -117,5 +131,7 @@ class ModbusRegisterManager:
                 proxy = ModbusFloat32(name, address, manager=self, **kwargs)
         else:
             raise ValueError(f"Unrecognized type for register {name}: {type}")
+        if deadband is not None:
+            proxy = DeadbandWrapper(proxy, deadband)
         return proxy
 

@@ -57,7 +57,9 @@ class MARTAClient(object):
         log.info(f"Done - state is {self.state}")
 
     def print_fsm(self):
-        log.info(f"FSM state: {self.state}")
+        with self._lock:
+            if self._changed:
+                log.info(f"FSM state: {self.state}")
 
     def _connect_modbus(self):
         if not self.modbus_client.connect():
@@ -138,6 +140,8 @@ class MARTAClient(object):
             log.fatal("MARTA is status 1 but CO2 set parameter is on: Should not happen!")
             return
 
+        old_state = self.state
+
         if status == 1 and not set_start_chiller:
             self.to_CONNECTED()
         elif status == 1 and set_start_chiller:
@@ -146,6 +150,10 @@ class MARTAClient(object):
             self.to_CO2_RUNNING()
         elif status == 3:
             self.to_ALARM()
+
+        if self.state != old_state:
+            with self._lock:
+                self._changed = True
 
     def command(self, topic, message):
         commands = ["start_chiller", "start_co2", "stop_co2", "stop_chiller",
@@ -194,15 +202,23 @@ class MARTAClient(object):
 
     def publish(self, force=False):
         if hasattr(self, "client"):
-            msg = json.dumps(self.status())
-            log.debug(f"Sending: {msg}")
-            self.client.publish("MARTA/status", msg)
+            status = self.status(force)
+            if status:
+                msg = json.dumps(status)
+                log.debug(f"Sending: {msg}")
+                self.client.publish("MARTA/status", msg)
 
-    def status(self):
-        return {
-            "fsm_state": str(self.state).split(".")[1],
-            **{ name: reg.read() for name,reg in self.register_map.items() }
-        }
+    def status(self, force=False):
+        status = dict()
+        for name,reg in self.register_map.items():
+            value = reg.read(force)
+            if value is not None:
+                status[name] = value
+        with self._lock:
+            if status or self._changed or force:
+                status["fsm_state"] = str(self.state).split(".")[1]
+                self._changed = False
+        return status
 
     def launch_mqtt(self, mqtt_host):
         def on_connect(client, userdata, flags, rc):
@@ -230,7 +246,7 @@ class MARTAClient(object):
         while 1:
             self.update_status()
             self.publish()
-            time.sleep(10)
+            time.sleep(1)
         client.disconnect()
         client.loop_stop()
 
