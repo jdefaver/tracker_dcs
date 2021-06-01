@@ -541,7 +541,7 @@ alarm_codes:
     TT04_CO2_HT_FS: "Error: Accumulator heater temperature too high"
 
     # guessed
-    EB_FS: "Error: Emergency stop"
+    EB_FS: "Error: Emergency button pressed"
     CP_HP_W: "Warning: chiller compressor discharge pressure high"
     CP_HP_FS: "Error: chiller compressor discharge pressure too high"
     CP_LP_W: "Warning: chiller compressor discharge pressure low"
