@@ -97,8 +97,7 @@ class ModbusRegisterManager:
         for start,length in self.chunks:
             rr = self.client.read_holding_registers(start, length, unit=self.unit)
             if rr.isError():
-                code = ModbusExceptions.decode(rr.exception_code)
-                raise ModbusException(f"Failure to read {length} registers starting from address {start}. Error code: {code}")
+                raise ModbusException(f"Failure to read {length} registers starting from address {start}. Error message: {rr.message}")
             for i,addr in enumerate(range(start, start+length)):
                 self.registers[addr] = rr.registers[i]
 
@@ -111,8 +110,7 @@ class ModbusRegisterManager:
         assert(all(addr in self.input_registers for addr in range(baseAddr, baseAddr + len(values))))
         rr = self.client.write_registers(baseAddr, values, unit=self.unit)
         if rr.isError():
-            code = ModbusExceptions.decode(rr.exception_code)
-            raise ModbusException(f"Failure to write {len(values)} registers starting from address {baseAddr}. Error code: {code}")
+            raise ModbusException(f"Failure to write {len(values)} registers starting from address {baseAddr}. Error message: {rr.message}")
         for i,addr in enumerate(range(baseAddr, baseAddr + len(values))):
             self.registers[addr] = values[i]
 

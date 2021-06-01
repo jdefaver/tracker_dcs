@@ -85,28 +85,28 @@ class MARTAClient(object):
         try:
             self.register_map["set_start_chiller"].write(1)
         except ModbusException as e:
-            log.error("Problem writing modbus register: {e}")
+            log.error(f"Problem writing modbus register: {e}")
             self.to_DISCONNECTED()
             raise e
     def start_co2(self):
         try:
             self.register_map["set_start_co2"].write(1)
         except ModbusException as e:
-            log.error("Problem writing modbus register: {e}")
+            log.error(f"Problem writing modbus register: {e}")
             self.to_DISCONNECTED()
             raise e
     def stop_co2(self):
         try:
             self.register_map["set_start_co2"].write(0)
         except ModbusException as e:
-            log.error("Problem writing modbus register: {e}")
+            log.error(f"Problem writing modbus register: {e}")
             self.to_DISCONNECTED()
             raise e
     def stop_chiller(self):
         try:
             self.register_map["set_start_chiller"].write(0)
         except ModbusException as e:
-            log.error("Problem writing modbus register: {e}")
+            log.error(f"Problem writing modbus register: {e}")
             self.to_DISCONNECTED()
             raise e
     def clear_alarms(self):
@@ -114,7 +114,7 @@ class MARTAClient(object):
             self.register_map["set_alarm_reset"].write(1)
             self.register_map["set_alarm_reset"].write(0)
         except ModbusException as e:
-            log.error("Problem writing modbus register: {e}")
+            log.error(f"Problem writing modbus register: {e}")
             self.to_DISCONNECTED()
             raise e
 
@@ -122,35 +122,33 @@ class MARTAClient(object):
         if self.state is MARTAStates.INIT or self.state is MARTAStates.DISCONNECTED:
             return
 
+        old_state = self.state
+
         try:
             self.modbus_manager.update()
         except ModbusException as e:
-            log.error("Problem reading the modbus registers: {e}")
+            log.error(f"Problem reading the modbus registers: {e}")
             self.to_DISCONNECTED()
-            raise e
+        else:
+            status = self.register_map["status"].read()
+            set_start_chiller = self.register_map["set_start_chiller"].read()
+            set_start_co2 = self.register_map["set_start_co2"].read()
 
-        status = self.register_map["status"].read()
-        set_start_chiller = self.register_map["set_start_chiller"].read()
-        set_start_co2 = self.register_map["set_start_co2"].read()
-        log.debug(f"FSM status: {self.state}, MARTA status: {status}, start chiller: {set_start_chiller}, start co2: {set_start_co2}")
+            if status == 2 and not set_start_co2:
+                log.fatal("MARTA is status 2 but CO2 set parameter is off: Should not happen!")
+                return
+            if status == 1 and set_start_co2:
+                log.fatal("MARTA is status 1 but CO2 set parameter is on: Should not happen!")
+                return
 
-        if status == 2 and not set_start_co2:
-            log.fatal("MARTA is status 2 but CO2 set parameter is off: Should not happen!")
-            return
-        if status == 1 and set_start_co2:
-            log.fatal("MARTA is status 1 but CO2 set parameter is on: Should not happen!")
-            return
-
-        old_state = self.state
-
-        if status == 1 and not set_start_chiller:
-            self.to_CONNECTED()
-        elif status == 1 and set_start_chiller:
-            self.to_CHILLER_RUNNING()
-        elif status == 2:
-            self.to_CO2_RUNNING()
-        elif status == 3:
-            self.to_ALARM()
+            if status == 1 and not set_start_chiller:
+                self.to_CONNECTED()
+            elif status == 1 and set_start_chiller:
+                self.to_CHILLER_RUNNING()
+            elif status == 2:
+                self.to_CO2_RUNNING()
+            elif status == 3:
+                self.to_ALARM()
 
         if self.state != old_state:
             with self._lock:
@@ -246,8 +244,6 @@ class MARTAClient(object):
                 self.command(msg.topic, msg.payload)
             except Exception as e:
                 log.error(f"Issue processing command: {e}")
-                print(e)
-                print(e.__dict__)
 
         mqtt_client = mqtt.Client()
         self.mqtt_client = mqtt_client
