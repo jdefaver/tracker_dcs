@@ -1,520 +1,578 @@
-# SENSORS
-PT01_R452A:
-    type: float32
-    address: 100
-    deadband: 0.5
-PT03_R452A:
-    type: float32
-    address: 102
-    deadband: 0.5
-PT04_R452A:
-    type: float32
-    address: 104
-    deadband: 0.5
-PT01_CO2:
-    type: float32
-    address: 106
-    deadband: 0.5
-PT02_CO2:
-    type: float32
-    address: 108
-    deadband: 0.5
-PT03_CO2:
-    type: float32
-    address: 110
-    deadband: 0.5
-PT04_CO2:
-    type: float32
-    address: 112
-    deadband: 0.5
-PT05_CO2:
-    type: float32
-    address: 114
-    deadband: 0.5
-PT06_CO2:
-    type: float32
-    address: 116
-    deadband: 0.5
-TT01_R452A:
-    type: float32
-    address: 118
-    deadband: 0.5
-TT02_R452A:
-    type: float32
-    address: 120
-    deadband: 0.5
-TT03_R452A:
-    type: float32
-    address: 122
-    deadband: 0.5
-TT04_R452A:
-    type: float32
-    address: 124
-    deadband: 0.5
-TT01_CO2:
-    type: float32
-    address: 126
-    deadband: 0.5
-TT02_CO2:
-    type: float32
-    address: 128
-    deadband: 0.5
-TT03_CO2:
-    type: float32
-    address: 130
-    deadband: 0.5
-TT04_CO2:
-    type: float32
-    address: 132
-    deadband: 0.5
-TT05_CO2:
-    type: float32
-    address: 134
-    deadband: 0.5
-TT06_CO2:
-    type: float32
-    address: 136
-    deadband: 0.5
-TT07_CO2:
-    type: float32
-    address: 138
-    deadband: 0.5
-FT01_CO2:
-    type: float32
-    address: 140
-    deadband: 0.5
+registers:
+    # SENSORS
+    PT01_R452A:
+        type: float32
+        address: 100
+        deadband: 0.5
+    PT03_R452A:
+        type: float32
+        address: 102
+        deadband: 0.5
+    PT04_R452A:
+        type: float32
+        address: 104
+        deadband: 0.5
+    PT01_CO2:
+        type: float32
+        address: 106
+        deadband: 0.5
+    PT02_CO2:
+        type: float32
+        address: 108
+        deadband: 0.5
+    PT03_CO2:
+        type: float32
+        address: 110
+        deadband: 0.5
+    PT04_CO2:
+        type: float32
+        address: 112
+        deadband: 0.5
+    PT05_CO2:
+        type: float32
+        address: 114
+        deadband: 0.5
+    PT06_CO2:
+        type: float32
+        address: 116
+        deadband: 0.5
+    TT01_R452A:
+        type: float32
+        address: 118
+        deadband: 0.5
+    TT02_R452A:
+        type: float32
+        address: 120
+        deadband: 0.5
+    TT03_R452A:
+        type: float32
+        address: 122
+        deadband: 0.5
+    TT04_R452A:
+        type: float32
+        address: 124
+        deadband: 0.5
+    TT01_CO2:
+        type: float32
+        address: 126
+        deadband: 0.5
+    TT02_CO2:
+        type: float32
+        address: 128
+        deadband: 0.5
+    TT03_CO2:
+        type: float32
+        address: 130
+        deadband: 0.5
+    TT04_CO2:
+        type: float32
+        address: 132
+        deadband: 0.5
+    TT05_CO2:
+        type: float32
+        address: 134
+        deadband: 0.5
+    TT06_CO2:
+        type: float32
+        address: 136
+        deadband: 0.5
+    TT07_CO2:
+        type: float32
+        address: 138
+        deadband: 0.5
+    FT01_CO2:
+        type: float32
+        address: 140
+        deadband: 0.5
 
-# CALCULATED VALUES
-SH01_R452A_calc:
-    type: float32
-    address: 142
-    deadband: 0.5
-SH03_R452A_calc:
-    type: float32
-    address: 144
-    deadband: 0.5
-ST01_R452A_calc:
-    type: float32
-    address: 146
-    deadband: 0.5
-ST03_R452A_calc:
-    type: float32
-    address: 148
-    deadband: 0.5
-ST01_CO2_calc:
-    type: float32
-    address: 150
-    deadband: 2.
-ST02_CO2_calc:
-    type: float32
-    address: 152
-    deadband: 2.
-ST03_CO2_calc:
-    type: float32
-    address: 154
-    deadband: 2.
-ST04_CO2_calc:
-    type: float32
-    address: 156
-    deadband: 2.
-ST05_CO2_calc:
-    type: float32
-    address: 158
-    deadband: 2.
-ST06_CO2_calc:
-    type: float32
-    address: 160
-    deadband: 2.
-SC01_CO2_calc:
-    type: float32
-    address: 162
-    deadband: 2.
-SC02_CO2_calc:
-    type: float32
-    address: 164
-    deadband: 2.
-SC03_CO2_calc:
-    type: float32
-    address: 166
-    deadband: 2.
-SC04_CO2_calc:
-    type: float32
-    address: 168
-    deadband: 2.
-SC05_CO2_calc:
-    type: float32
-    address: 170
-    deadband: 2.
-SC06_CO2_calc:
-    type: float32
-    address: 172
-    deadband: 2.
-DP01_CO2_calc:
-    type: float32
-    address: 174
-    deadband: 2.0
-DP02_CO2_calc:
-    type: float32
-    address: 176
-    deadband: 2.0
-DP03_CO2_calc:
-    type: float32
-    address: 178
-    deadband: 0.5
-DP04_CO2_calc:
-    type: float32
-    address: 180
-    deadband: 0.5
-DT02_CO2_calc:
-    type: float32
-    address: 182
-    deadband: 0.5
-DT03_CO2_calc:
-    type: float32
-    address: 184
-    deadband: 0.5
-DP_EV3C_CO2_calc:
-    type: float32
-    address: 186
-    deadband: 2.
-SC01_CO2_Start_calc:
-    type: float32
-    address: 190
-    deadband: 2.
+    # CALCULATED VALUES
+    SH01_R452A_calc:
+        type: float32
+        address: 142
+        deadband: 0.5
+    SH03_R452A_calc:
+        type: float32
+        address: 144
+        deadband: 0.5
+    ST01_R452A_calc:
+        type: float32
+        address: 146
+        deadband: 0.5
+    ST03_R452A_calc:
+        type: float32
+        address: 148
+        deadband: 0.5
+    ST01_CO2_calc:
+        type: float32
+        address: 150
+        deadband: 2.
+    ST02_CO2_calc:
+        type: float32
+        address: 152
+        deadband: 2.
+    ST03_CO2_calc:
+        type: float32
+        address: 154
+        deadband: 2.
+    ST04_CO2_calc:
+        type: float32
+        address: 156
+        deadband: 2.
+    ST05_CO2_calc:
+        type: float32
+        address: 158
+        deadband: 2.
+    ST06_CO2_calc:
+        type: float32
+        address: 160
+        deadband: 2.
+    SC01_CO2_calc:
+        type: float32
+        address: 162
+        deadband: 2.
+    SC02_CO2_calc:
+        type: float32
+        address: 164
+        deadband: 2.
+    SC03_CO2_calc:
+        type: float32
+        address: 166
+        deadband: 2.
+    SC04_CO2_calc:
+        type: float32
+        address: 168
+        deadband: 2.
+    SC05_CO2_calc:
+        type: float32
+        address: 170
+        deadband: 2.
+    SC06_CO2_calc:
+        type: float32
+        address: 172
+        deadband: 2.
+    DP01_CO2_calc:
+        type: float32
+        address: 174
+        deadband: 2.0
+    DP02_CO2_calc:
+        type: float32
+        address: 176
+        deadband: 2.0
+    DP03_CO2_calc:
+        type: float32
+        address: 178
+        deadband: 0.5
+    DP04_CO2_calc:
+        type: float32
+        address: 180
+        deadband: 0.5
+    DT02_CO2_calc:
+        type: float32
+        address: 182
+        deadband: 0.5
+    DT03_CO2_calc:
+        type: float32
+        address: 184
+        deadband: 0.5
+    DP_EV3C_CO2_calc:
+        type: float32
+        address: 186
+        deadband: 2.
+    SC01_CO2_Start_calc:
+        type: float32
+        address: 190
+        deadband: 2.
 
-# OPERATIONAL PARAMETERS
-EV1_valve_pos:
-    type: float32
-    address: 192
-    deadband: 0.5
-EV2_valve_pos:
-    type: float32
-    address: 194
-    deadband: 0.5
-EV3_valve_pos:
-    type: float32
-    address: 196
-    deadband: 0.5
-EV3C_valve_pos:
-    type: float32
-    address: 198
-    deadband: 0.5
-LP_speed:
-    type: float32
-    address: 200
-    deadband: 0.5
-EH_power:
-    type: float32
-    address: 202
-    deadband: 0.5
-temperature_setpoint:
-    type: float32
-    address: 204
-    deadband: 0.
-speed_setpoint:
-    type: float32
-    address: 206
-    deadband: 0.
-flow_setpoint:
-    type: float32
-    address: 208
-    deadband: 0.
-TC04_TSP:
-    type: float32
-    address: 210
-    deadband: 0.5
+    # OPERATIONAL PARAMETERS
+    EV1_valve_pos:
+        type: float32
+        address: 192
+        deadband: 0.5
+    EV2_valve_pos:
+        type: float32
+        address: 194
+        deadband: 0.5
+    EV3_valve_pos:
+        type: float32
+        address: 196
+        deadband: 0.5
+    EV3C_valve_pos:
+        type: float32
+        address: 198
+        deadband: 0.5
+    LP_speed:
+        type: float32
+        address: 200
+        deadband: 0.5
+    EH_power:
+        type: float32
+        address: 202
+        deadband: 0.5
+    temperature_setpoint:
+        type: float32
+        address: 204
+        deadband: 0.
+    speed_setpoint:
+        type: float32
+        address: 206
+        deadband: 0.
+    flow_setpoint:
+        type: float32
+        address: 208
+        deadband: 0.
+    TC04_TSP:
+        type: float32
+        address: 210
+        deadband: 0.5
 
-# CHILLER ALARMS
-ChTT_IOErr_FS:
-    address: 300
-    bit: 0
-    type: bool
-    deadband: 0
-ChPT_IOErr_FS:
-    address: 300
-    bit: 1
-    type: bool
-    deadband: 0
-PS_HP_FS:
-    address: 300
-    bit: 2
-    type: bool
-    deadband: 0
-PS_LP_FS:
-    address: 300
-    bit: 3
-    type: bool
-    deadband: 0
-CP_HP_FS:
-    address: 300
-    bit: 4
-    type: bool
-    deadband: 0
-CP_HP_W:
-    address: 300
-    bit: 5
-    type: bool
-    deadband: 0
-CP_LP_FS:
-    address: 300
-    bit: 6
-    type: bool
-    deadband: 0
-CP_LP_W:
-    address: 300
-    bit: 7
-    type: bool
-    deadband: 0
-SH03_R452A_FS:
-    address: 300
-    bit: 8
-    type: bool
-    deadband: 0
-SH03_R452A_W1:
-    address: 300
-    bit: 9
-    type: bool
-    deadband: 0
-TT03_R452A_HT_W1:
-    address: 300
-    bit: 10
-    type: bool
-    deadband: 0
-TT03_R452A_LT_FS1:
-    address: 300
-    bit: 11
-    type: bool
-    deadband: 0
-TT03_R452A_LT_W1:
-    address: 300
-    bit: 12
-    type: bool
-    deadband: 0
-ST01_R452A_TS1:
-    address: 300
-    bit: 13
-    type: bool
-    deadband: 0
-ST01_R452A_W1:
-    address: 300
-    bit: 14
-    type: bool
-    deadband: 0
-TT04_R452A_HT_FS1:
-    address: 300
-    bit: 15
-    type: bool
-    deadband: 0
-TT04_R452A_HT_W1:
-    address: 301
-    bit: 0
-    type: bool
-    deadband: 0
-EV1_CEr_FS1:
-    address: 301
-    bit: 1
-    type: bool
-    deadband: 0
-EV2_CEr_FS1:
-    address: 301
-    bit: 2
-    type: bool
-    deadband: 0
-EV3_CEr_FS2:
-    address: 301
-    bit: 3
-    type: bool
-    deadband: 0
-CP_CB_FS2:
-    address: 301
-    bit: 4
-    type: bool
-    deadband: 0
-V_CB_FS2:
-    address: 301
-    bit: 5
-    type: bool
-    deadband: 0
-UPS_MODE_FS2:
-    address: 301
-    bit: 6
-    type: bool
-    deadband: 0
-EB_FS2:
-    address: 301
-    bit: 7
-    type: bool
-    deadband: 0
-CP_Cnt_FS2:
-    address: 301
-    bit: 8
-    type: bool
-    deadband: 0
+    # SET PARAMETERS
+    set_start_chiller:
+        address: 305
+        bit: 0
+        type: bool
+        input: true
+        deadband: 0
+    set_start_co2:
+        address: 305
+        bit: 1
+        type: bool
+        input: true
+        deadband: 0
+    set_flow_active:
+        address: 305
+        bit: 2
+        type: bool
+        input: true
+        deadband: 0
+    set_alarm_reset:
+        address: 305
+        bit: 3
+        type: bool
+        input: true
+        deadband: 0
+    set_temperature_setpoint:
+        address: 310
+        type: float32
+        input: true
+        deadband: 0
+    set_speed_setpoint:
+        address: 312
+        type: float32
+        input: true
+        deadband: 0
+    set_flow_setpoint:
+        address: 314
+        type: float32
+        input: true
+        deadband: 0
 
-# CO2 ALARMS
-TT_IOErr_FS:
-    address: 302
-    bit: 0
-    type: bool
-    deadband: 0
-PT_IOErr_FS:
-    address: 302
-    bit: 1
-    type: bool
-    deadband: 0
-DP01_CO2_FS:
-    address: 302
-    bit: 2
-    type: bool
-    deadband: 0
-DP01_CO2_W:
-    address: 302
-    bit: 3
-    type: bool
-    deadband: 0
-DP02_CO2_FS:
-    address: 302
-    bit: 4
-    type: bool
-    deadband: 0
-DP02_CO2_W:
-    address: 302
-    bit: 5
-    type: bool
-    deadband: 0
-DP03_CO2_LP_FS:
-    address: 302
-    bit: 6
-    type: bool
-    deadband: 0
-DP03_CO2_LP_W:
-    address: 302
-    bit: 7
-    type: bool
-    deadband: 0
-DP03_CO2_HP_FS:
-    address: 302
-    bit: 8
-    type: bool
-    deadband: 0
-DP03_CO2_HP_W:
-    address: 302
-    bit: 9
-    type: bool
-    deadband: 0
-DT03_CO2_HT_FS:
-    address: 302
-    bit: 10
-    type: bool
-    deadband: 0
-DT03_CO2_HT_W:
-    address: 302
-    bit: 11
-    type: bool
-    deadband: 0
-PT02_CO2_HP_FS:
-    address: 302
-    bit: 12
-    type: bool
-    deadband: 0
-SC01_CO2_FS:
-    address: 302
-    bit: 13
-    type: bool
-    deadband: 0
-SC01_CO2_W:
-    address: 302
-    bit: 14
-    type: bool
-    deadband: 0
-TT01_CO2_LT_FS:
-    address: 302
-    bit: 15
-    type: bool
-    deadband: 0
-PT04_CO2_HP_FS:
-    address: 303
-    bit: 0
-    type: bool
-    deadband: 0
-PT04_CO2_HP_W:
-    address: 303
-    bit: 1
-    type: bool
-    deadband: 0
-TT04_CO2_HT_FS:
-    address: 303
-    bit: 2
-    type: bool
-    deadband: 0
-TT04_CO2_HT_TS:
-    address: 303
-    bit: 3
-    type: bool
-    deadband: 0
-TT04_CO2_HT_W:
-    address: 303
-    bit: 4
-    type: bool
-    deadband: 0
-EV3C_CEr_FS:
-    address: 303
-    bit: 5
-    type: bool
-    deadband: 0
-EH_CB_FS:
-    address: 303
-    bit: 6
-    type: bool
-    deadband: 0
-LP_CB_FS:
-    address: 303
-    bit: 7
-    type: bool
-    deadband: 0
+    # STATUS
+    status:
+        address: 320
+        deadband: 0
 
-# SET PARAMETERS
-set_start_chiller:
-    address: 305
-    bit: 0
-    type: bool
-    input: true
-    deadband: 0
-set_start_co2:
-    address: 305
-    bit: 1
-    type: bool
-    input: true
-    deadband: 0
-set_flow_active:
-    address: 305
-    bit: 2
-    type: bool
-    input: true
-    deadband: 0
-set_alarm_reset:
-    address: 305
-    bit: 3
-    type: bool
-    input: true
-    deadband: 0
-set_temperature_setpoint:
-    address: 310
-    type: float32
-    input: true
-    deadband: 0
-set_speed_setpoint:
-    address: 312
-    type: float32
-    input: true
-    deadband: 0
-set_flow_setpoint:
-    address: 314
-    type: float32
-    input: true
-    deadband: 0
+    # CHILLER ALARMS
+    ChTT_IOErr_FS:
+        address: 300
+        bit: 0
+        type: bool
+        deadband: 0
+    ChPT_IOErr_FS:
+        address: 300
+        bit: 1
+        type: bool
+        deadband: 0
+    PS_HP_FS:
+        address: 300
+        bit: 2
+        type: bool
+        deadband: 0
+    PS_LP_FS:
+        address: 300
+        bit: 3
+        type: bool
+        deadband: 0
+    CP_HP_FS:
+        address: 300
+        bit: 4
+        type: bool
+        deadband: 0
+    CP_HP_W:
+        address: 300
+        bit: 5
+        type: bool
+        deadband: 0
+    CP_LP_FS:
+        address: 300
+        bit: 6
+        type: bool
+        deadband: 0
+    CP_LP_W:
+        address: 300
+        bit: 7
+        type: bool
+        deadband: 0
+    SH03_R452A_FS:
+        address: 300
+        bit: 8
+        type: bool
+        deadband: 0
+    SH03_R452A_W:
+        address: 300
+        bit: 9
+        type: bool
+        deadband: 0
+    TT03_R452A_HT_W:
+        address: 300
+        bit: 10
+        type: bool
+        deadband: 0
+    TT03_R452A_LT_FS:
+        address: 300
+        bit: 11
+        type: bool
+        deadband: 0
+    TT03_R452A_LT_W:
+        address: 300
+        bit: 12
+        type: bool
+        deadband: 0
+    ST01_R452A_TS:
+        address: 300
+        bit: 13
+        type: bool
+        deadband: 0
+    ST01_R452A_W:
+        address: 300
+        bit: 14
+        type: bool
+        deadband: 0
+    TT04_R452A_HT_FS:
+        address: 300
+        bit: 15
+        type: bool
+        deadband: 0
+    TT04_R452A_HT_W:
+        address: 301
+        bit: 0
+        type: bool
+        deadband: 0
+    EV1_CEr_FS:
+        address: 301
+        bit: 1
+        type: bool
+        deadband: 0
+    EV2_CEr_FS:
+        address: 301
+        bit: 2
+        type: bool
+        deadband: 0
+    EV3_CEr_FS:
+        address: 301
+        bit: 3
+        type: bool
+        deadband: 0
+    CP_CB_FS:
+        address: 301
+        bit: 4
+        type: bool
+        deadband: 0
+    V_CB_FS:
+        address: 301
+        bit: 5
+        type: bool
+        deadband: 0
+    UPS_MODE_FS:
+        address: 301
+        bit: 6
+        type: bool
+        deadband: 0
+    EB_FS:
+        address: 301
+        bit: 7
+        type: bool
+        deadband: 0
+    CP_Cnt_FS:
+        address: 301
+        bit: 8
+        type: bool
+        deadband: 0
 
-# STATUS
-status:
-    address: 320
-    deadband: 0
+    # CO2 ALARMS
+    TT_IOErr_FS:
+        address: 302
+        bit: 0
+        type: bool
+        deadband: 0
+    PT_IOErr_FS:
+        address: 302
+        bit: 1
+        type: bool
+        deadband: 0
+    DP01_CO2_FS:
+        address: 302
+        bit: 2
+        type: bool
+        deadband: 0
+    DP01_CO2_W:
+        address: 302
+        bit: 3
+        type: bool
+        deadband: 0
+    DP02_CO2_FS:
+        address: 302
+        bit: 4
+        type: bool
+        deadband: 0
+    DP02_CO2_W:
+        address: 302
+        bit: 5
+        type: bool
+        deadband: 0
+    DP03_CO2_LP_FS:
+        address: 302
+        bit: 6
+        type: bool
+        deadband: 0
+    DP03_CO2_LP_W:
+        address: 302
+        bit: 7
+        type: bool
+        deadband: 0
+    DP03_CO2_HP_FS:
+        address: 302
+        bit: 8
+        type: bool
+        deadband: 0
+    DP03_CO2_HP_W:
+        address: 302
+        bit: 9
+        type: bool
+        deadband: 0
+    DT03_CO2_HT_FS:
+        address: 302
+        bit: 10
+        type: bool
+        deadband: 0
+    DT03_CO2_HT_W:
+        address: 302
+        bit: 11
+        type: bool
+        deadband: 0
+    PT02_CO2_HP_FS:
+        address: 302
+        bit: 12
+        type: bool
+        deadband: 0
+    SC01_CO2_FS:
+        address: 302
+        bit: 13
+        type: bool
+        deadband: 0
+    SC01_CO2_W:
+        address: 302
+        bit: 14
+        type: bool
+        deadband: 0
+    TT01_CO2_LT_FS:
+        address: 302
+        bit: 15
+        type: bool
+        deadband: 0
+    PT04_CO2_HP_FS:
+        address: 303
+        bit: 0
+        type: bool
+        deadband: 0
+    PT04_CO2_HP_W:
+        address: 303
+        bit: 1
+        type: bool
+        deadband: 0
+    TT04_CO2_HT_FS:
+        address: 303
+        bit: 2
+        type: bool
+        deadband: 0
+    TT04_CO2_HT_TS:
+        address: 303
+        bit: 3
+        type: bool
+        deadband: 0
+    TT04_CO2_HT_W:
+        address: 303
+        bit: 4
+        type: bool
+        deadband: 0
+    EV3C_CEr_FS:
+        address: 303
+        bit: 5
+        type: bool
+        deadband: 0
+    EH_CB_FS:
+        address: 303
+        bit: 6
+        type: bool
+        deadband: 0
+    LP_CB_FS:
+        address: 303
+        bit: 7
+        type: bool
+        deadband: 0
+
+alarm_codes:
+    DP01_CO2_W: "Warning: pressure drop over FL1 high"
+    DP01_CO2_FS: "Error: pressure drop over FL1 too high"
+    DP02_CO2_W: "Warning: pressure drop over FL2 high"
+    DP02_CO2_FS: "Error: pressure drop over FL2 too high"
+    DP03_CO2_LP_W: "Warning: Pump LP1 delta pressure low"
+    DP03_CO2_LP_FS: "Error: Pump LP1 delta pressure too low"
+    DP03_CO2_HP_W: "Warning: Pump LP1 delta pressure high"
+    DP03_CO2_HP_FS: "Warning: Pump LP1 delta pressure too high"
+    DT03_CO2_HT_W: "Warning: Pump LP1 delta temperature high"
+    PT02_CO2_HP_FS: "Error: Pump outlet pressure too high" # PT03??
+    SC01_CO2_W: "Warning: Pump suction subcooling low"
+    SC01_CO2_FS: "Error: Pump suction subcooling too low"
+    TT01_CO2_LT_FS: "Error: Too low CO2 temperature"
+    PT04_CO2_HP_W: "Warning: Accumulator pressure high"
+    PT04_CO2_HP_FS: "Error: Accumulator pressure too high"
+    TT04_CO2_HT_W: "Warning: Accumulator heater temperature high"
+    TT04_CO2_HT_TS: "Error: Accumulator heater temperature very high"
+    TT04_CO2_HT_FS: "Error: Accumulator heater temperature too high"
+
+    # guessed
+    EB_FS: "Error: Emergency stop"
+    CP_HP_W: "Warning: chiller compressor discharge pressure high"
+    CP_HP_FS: "Error: chiller compressor discharge pressure too high"
+    CP_LP_W: "Warning: chiller compressor discharge pressure low"
+    UPS_MODE_FS: "Error: UPS mode, power supply error"
+    CP_CB_FS: "Error: Compressor circuit breaker"
+    V_CB_FS: "Error: Fans circuit breaker"
+    EH_CB_FS: "Error: Heater circuit breaker"
+    LP_CB_FS: "Error: CO2 pump circuit breaker of driver"
+    PS_LP_FS: "Error: Low pressure - Pressure switch"
+    PS_HP_FS: "Error: High pressure - Pressure switch"
+    DT03_CO2_HT_FS: "Error: Pump LP1 delta temperature too high"
+    SH03_R452A_FS: "Error: chiller superheating SH03"
+    SH03_R452A_W: "Warning: chiller superheating SH03"
+    ST01_R452A_W: "Warning: chiller saturation temperature ST01"
+    ST01_R452A_TS: "Error: chiller saturation temperature ST01"
+    TT03_R452A_HT_W: "Warning: chiller temperature TT03 too high"
+    TT03_R452A_LT_W: "Warning: chiller temperature TT03 low"
+    TT03_R452A_LT_FS: "Error: chiller temperature TT03 very low"
+    TT04_R452A_HT_W: "Warning: chiller temperature TT04 high"
+    TT04_R452A_HT_FS: "Error: chiller temperature TT04 too high"
+
+    #Interlock_IN_HMI: "Interlock IN trigger"
+    #Kill_Switch_HMI: "Kill switch trigger"
+
+    ChTT_IOErr_FS: "?"
+    ChPT_IOErr_FS: "?"
+    EV1_CEr_FS: "?"
+    EV2_CEr_FS: "?"
+    EV3_CEr_FS: "?"
+    CP_Cnt_FS: "?"
+    TT_IOErr_FS: "?"
+    PT_IOErr_FS: "?"
+    EV3C_CEr_FS: "?"
+

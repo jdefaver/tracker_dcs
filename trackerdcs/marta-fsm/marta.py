@@ -67,7 +67,7 @@ class MARTAClient(object):
 
         # create register manager and read all register values
         self.modbus_manager = modbus.ModbusRegisterManager(self.modbus_client, unit=self.slaveId)
-        for name,cfg in self.config.items():
+        for name,cfg in self.config["registers"].items():
             self.register_map[name] = self.modbus_manager.makeProxy(name, **cfg)
         self.modbus_manager.update()
 
@@ -132,6 +132,7 @@ class MARTAClient(object):
         status = self.register_map["status"].read()
         set_start_chiller = self.register_map["set_start_chiller"].read()
         set_start_co2 = self.register_map["set_start_co2"].read()
+        log.debug(f"FSM status: {self.state}, MARTA status: {status}, start chiller: {set_start_chiller}, start co2: {set_start_co2}")
 
         if status == 2 and not set_start_co2:
             log.fatal("MARTA is status 2 but CO2 set parameter is off: Should not happen!")
@@ -201,12 +202,15 @@ class MARTAClient(object):
             self.fsm_reconnect_modbus()
 
     def publish(self, force=False):
-        if hasattr(self, "client"):
+        if hasattr(self, "mqtt_client"):
             status = self.status(force)
+            # only publish if any value changed, i.e. non-empty status dict
             if status:
                 msg = json.dumps(status)
                 log.debug(f"Sending: {msg}")
-                self.client.publish("MARTA/status", msg)
+                self.mqtt_client.publish("MARTA/status", msg)
+            # always publish full alarm message - they're not logged in the DB
+            self.mqtt_client.publish("MARTA/alarms", self.alarm_message())
 
     def status(self, force=False):
         status = dict()
@@ -219,6 +223,13 @@ class MARTAClient(object):
                 status["fsm_state"] = str(self.state).split(".")[1]
                 self._changed = False
         return status
+
+    def alarm_message(self):
+        message = ""
+        for regNm,msg in self.config["alarm_codes"].items():
+            if self.register_map[regNm].read():
+                message += f"{regNm} - {msg}\n"
+        return message
 
     def launch_mqtt(self, mqtt_host):
         def on_connect(client, userdata, flags, rc):
@@ -235,20 +246,22 @@ class MARTAClient(object):
                 self.command(msg.topic, msg.payload)
             except Exception as e:
                 log.error(f"Issue processing command: {e}")
+                print(e)
+                print(e.__dict__)
 
-        client = mqtt.Client()
-        self.client = client
+        mqtt_client = mqtt.Client()
+        self.mqtt_client = mqtt_client
 
-        client.on_connect = on_connect
-        client.on_message = on_message
-        client.connect(mqtt_host, 1883, 60)
-        client.loop_start()
+        mqtt_client.on_connect = on_connect
+        mqtt_client.on_message = on_message
+        mqtt_client.connect(mqtt_host, 1883, 60)
+        mqtt_client.loop_start()
         while 1:
             self.update_status()
             self.publish()
             time.sleep(1)
-        client.disconnect()
-        client.loop_stop()
+        mqtt_client.disconnect()
+        mqtt_client.loop_stop()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Entry point for CAEN PS control and monitoring backend")

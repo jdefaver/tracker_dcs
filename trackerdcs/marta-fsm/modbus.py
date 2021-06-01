@@ -40,7 +40,7 @@ class ModbusBool(ModbusMetric):
 class ModbusSetBool(ModbusBool, ModbusSetParam):
     def write(self, value):
         value = bool(value)
-        curr_values = super().read()
+        curr_values = self.manager.get(self.address)[0]
         new_values = (curr_values & ~(0b1 << self.bit)) | (value << self.bit)
         super().write(new_values)
 
@@ -70,7 +70,7 @@ class DeadbandWrapper:
         self.deadband = deadband
         if hasattr(metric, "write"):
             self.write = metric.write
-    def read(self, force=False):
+    def read(self, force=True):
         new_value = self.metric.read()
         if force or self.prev_value is None or abs(new_value - self.prev_value) > self.deadband:
             self.prev_value = new_value
@@ -109,7 +109,7 @@ class ModbusRegisterManager:
         if isinstance(values, int):
             values = [ values ]
         assert(all(addr in self.input_registers for addr in range(baseAddr, baseAddr + len(values))))
-        rr = client.write_registers(baseAddr, values, unit=self.unit)
+        rr = self.client.write_registers(baseAddr, values, unit=self.unit)
         if rr.isError():
             code = ModbusExceptions.decode(rr.exception_code)
             raise ModbusException(f"Failure to write {len(values)} registers starting from address {baseAddr}. Error code: {code}")
