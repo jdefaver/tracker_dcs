@@ -120,6 +120,9 @@ class MARTAClient(object):
             raise e
     def clear_alarms(self):
         try:
+            # also reset the CO2 and chiller bits, otherwise they would restart immediately after clearing the alarm
+            self.register_map["set_start_co2"].write(0)
+            self.register_map["set_start_chiller"].write(0)
             self.register_map["set_alarm_reset"].write(1)
             self.register_map["set_alarm_reset"].write(0)
         except ModbusException as e:
