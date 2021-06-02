@@ -40,7 +40,7 @@ class MARTAClient(object):
         ]
 
         self._lock = threading.Lock()
-        self._changed = False
+        self._fsm_state_changed = False
         self._old_state = MARTAStates.INIT
 
         self.machine = Machine(model=self, states=MARTAStates, transitions=transitions, initial=MARTAStates.INIT)
@@ -64,11 +64,9 @@ class MARTAClient(object):
             # the 'to_STATE()' functions to force the FSM state, which would result in
             # calls to _state_change() even if the state didn't actually change
             if self._old_state != self.state:
-                self._changed = True
+                self._fsm_state_changed = True
                 log.info(f"New FSM state: {self.state}")
                 self._old_state = self.state
-            else:
-                self._changed = False
 
     def _connect_modbus(self):
         if not self.modbus_client.connect():
@@ -222,9 +220,9 @@ class MARTAClient(object):
             if value is not None:
                 status[name] = value
         with self._lock:
-            if status or self._changed or force:
+            if status or self._fsm_state_changed or force:
                 status["fsm_state"] = str(self.state).split(".")[1]
-                self._changed = False
+                self._fsm_state_changed = False
         return status
 
     def alarm_message(self):
