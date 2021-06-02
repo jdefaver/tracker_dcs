@@ -40,26 +40,35 @@ class MARTAClient(object):
         ]
 
         self._lock = threading.Lock()
-        self._changed = True
+        self._changed = False
+        self._old_state = MARTAStates.INIT
 
         self.machine = Machine(model=self, states=MARTAStates, transitions=transitions, initial=MARTAStates.INIT)
 
         for s in MARTAStates:
-            getattr(self.machine, "on_enter_" + str(s).split(".")[1])("print_fsm")
+            getattr(self.machine, "on_enter_" + str(s).split(".")[1])("_state_change")
 
         self.modbus_client = ModbusTcpClient(ipAddr)
         self.slaveId = slaveId
         self.register_map = dict()
+        self.modbus_manager = None
 
         with open(configPath) as _f:
             self.config = yaml.load(_f, Loader=yaml.loader.SafeLoader)
 
         log.info(f"Done - state is {self.state}")
 
-    def print_fsm(self):
+    def _state_change(self):
         with self._lock:
-            if self._changed:
-                log.info(f"FSM state: {self.state}")
+            # We have to check explicitly if the state changed because we're using
+            # the 'to_STATE()' functions to force the FSM state, which would result in
+            # calls to _state_change() even if the state didn't actually change
+            if self._old_state != self.state:
+                self._changed = True
+                log.info(f"New FSM state: {self.state}")
+                self._old_state = self.state
+            else:
+                self._changed = False
 
     def _connect_modbus(self):
         if not self.modbus_client.connect():
@@ -86,28 +95,28 @@ class MARTAClient(object):
             self.register_map["set_start_chiller"].write(1)
         except ModbusException as e:
             log.error(f"Problem writing modbus register: {e}")
-            self.to_DISCONNECTED()
+            self.fsm_disconnect_modbus()
             raise e
     def start_co2(self):
         try:
             self.register_map["set_start_co2"].write(1)
         except ModbusException as e:
             log.error(f"Problem writing modbus register: {e}")
-            self.to_DISCONNECTED()
+            self.fsm_disconnect_modbus()
             raise e
     def stop_co2(self):
         try:
             self.register_map["set_start_co2"].write(0)
         except ModbusException as e:
             log.error(f"Problem writing modbus register: {e}")
-            self.to_DISCONNECTED()
+            self.fsm_disconnect_modbus()
             raise e
     def stop_chiller(self):
         try:
             self.register_map["set_start_chiller"].write(0)
         except ModbusException as e:
             log.error(f"Problem writing modbus register: {e}")
-            self.to_DISCONNECTED()
+            self.fsm_disconnect_modbus()
             raise e
     def clear_alarms(self):
         try:
@@ -115,44 +124,37 @@ class MARTAClient(object):
             self.register_map["set_alarm_reset"].write(0)
         except ModbusException as e:
             log.error(f"Problem writing modbus register: {e}")
-            self.to_DISCONNECTED()
+            self.fsm_disconnect_modbus()
             raise e
 
     def update_status(self):
         if self.state is MARTAStates.INIT or self.state is MARTAStates.DISCONNECTED:
             return
 
-        old_state = self.state
-
         try:
             self.modbus_manager.update()
         except ModbusException as e:
             log.error(f"Problem reading the modbus registers: {e}")
-            self.to_DISCONNECTED()
-        else:
-            status = self.register_map["status"].read()
-            set_start_chiller = self.register_map["set_start_chiller"].read()
-            set_start_co2 = self.register_map["set_start_co2"].read()
+            self.fsm_disconnect_modbus()
+            return
 
-            if status == 2 and not set_start_co2:
-                log.fatal("MARTA is status 2 but CO2 set parameter is off: Should not happen!")
-                return
-            if status == 1 and set_start_co2:
-                log.fatal("MARTA is status 1 but CO2 set parameter is on: Should not happen!")
-                return
+        status = self.register_map["status"].read()
+        set_start_chiller = self.register_map["set_start_chiller"].read()
+        set_start_co2 = self.register_map["set_start_co2"].read()
 
-            if status == 1 and not set_start_chiller:
-                self.to_CONNECTED()
-            elif status == 1 and set_start_chiller:
-                self.to_CHILLER_RUNNING()
-            elif status == 2:
-                self.to_CO2_RUNNING()
-            elif status == 3:
-                self.to_ALARM()
+        if status == 2 and not set_start_co2:
+            raise RuntimeError("MARTA is status 2 but CO2 set parameter is off: Should not happen!")
+        if status == 1 and set_start_co2:
+            raise RuntimeError("MARTA is status 1 but CO2 set parameter is on: Should not happen!")
 
-        if self.state != old_state:
-            with self._lock:
-                self._changed = True
+        if status == 1 and not set_start_chiller:
+            self.to_CONNECTED()
+        elif status == 1 and set_start_chiller:
+            self.to_CHILLER_RUNNING()
+        elif status == 2:
+            self.to_CO2_RUNNING()
+        elif status == 3:
+            self.to_ALARM()
 
     def command(self, topic, message):
         commands = ["start_chiller", "start_co2", "stop_co2", "stop_chiller",
@@ -226,7 +228,7 @@ class MARTAClient(object):
         message = ""
         for regNm,msg in self.config["alarm_codes"].items():
             if self.register_map[regNm].read():
-                message += f"{regNm} - {msg}\n"
+                message += f"{msg} ({regNm})\n"
         return message
 
     def launch_mqtt(self, mqtt_host):
@@ -252,10 +254,16 @@ class MARTAClient(object):
         mqtt_client.on_message = on_message
         mqtt_client.connect(mqtt_host, 1883, 60)
         mqtt_client.loop_start()
+        counter = 1
         while 1:
             self.update_status()
-            self.publish()
+            force_update = False
+            if counter == 300: # publish full status roughly every 5 minutes
+                force_update = True
+                counter = 1
+            self.publish(force_update)
             time.sleep(1)
+            counter += 1
         mqtt_client.disconnect()
         mqtt_client.loop_stop()
 
