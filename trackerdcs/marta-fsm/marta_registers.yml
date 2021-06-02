@@ -161,11 +161,11 @@ registers:
     DP03_CO2_calc:
         type: float32
         address: 178
-        deadband: 0.5
+        deadband: 0.1
     DP04_CO2_calc:
         type: float32
         address: 180
-        deadband: 0.5
+        deadband: 0.1
     DT02_CO2_calc:
         type: float32
         address: 182
