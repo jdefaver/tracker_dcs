@@ -15,27 +15,27 @@ registers:
     PT01_CO2:
         type: float32
         address: 106
-        deadband: 0.5
+        deadband: 0.2
     PT02_CO2:
         type: float32
         address: 108
-        deadband: 0.5
+        deadband: 0.2
     PT03_CO2:
         type: float32
         address: 110
-        deadband: 0.5
+        deadband: 0.2
     PT04_CO2:
         type: float32
         address: 112
-        deadband: 0.5
+        deadband: 0.2
     PT05_CO2:
         type: float32
         address: 114
-        deadband: 0.5
+        deadband: 0.2
     PT06_CO2:
         type: float32
         address: 116
-        deadband: 0.5
+        deadband: 0.2
     TT01_R452A:
         type: float32
         address: 118
@@ -71,11 +71,11 @@ registers:
     TT05_CO2:
         type: float32
         address: 134
-        deadband: 0.5
+        deadband: 0.2
     TT06_CO2:
         type: float32
         address: 136
-        deadband: 0.5
+        deadband: 0.2
     TT07_CO2:
         type: float32
         address: 138
@@ -105,67 +105,68 @@ registers:
     ST01_CO2_calc:
         type: float32
         address: 150
-        deadband: 2.
+        deadband: 0.5
     ST02_CO2_calc:
         type: float32
         address: 152
-        deadband: 2.
+        deadband: 0.5
     ST03_CO2_calc:
         type: float32
         address: 154
-        deadband: 2.
+        deadband: 0.5
     ST04_CO2_calc:
         type: float32
         address: 156
-        deadband: 2.
+        deadband: 0.5
     ST05_CO2_calc:
         type: float32
         address: 158
-        deadband: 2.
+        deadband: 0.5
     ST06_CO2_calc:
         type: float32
         address: 160
-        deadband: 2.
+        deadband: 0.5
     SC01_CO2_calc:
         type: float32
         address: 162
-        deadband: 2.
+        deadband: 0.5
     SC02_CO2_calc:
         type: float32
         address: 164
-        deadband: 2.
+        deadband: 0.5
     SC03_CO2_calc:
         type: float32
         address: 166
-        deadband: 2.
+        deadband: 0.5
     SC04_CO2_calc:
         type: float32
         address: 168
-        deadband: 2.
+        deadband: 0.5
     SC05_CO2_calc:
         type: float32
-        address: 170
-        deadband: 2.
-    SC06_CO2_calc:
-        type: float32
-        address: 172
-        deadband: 2.
+        address: 172 # WARNING: EXCHANGED WITH 170
+        deadband: 0.5
+    # WHAT IS THIS?
+    #SC06_CO2_calc:
+    #    type: float32
+    #    address: 172
+    #    deadband: 0.5
     DP01_CO2_calc:
         type: float32
         address: 174
-        deadband: 2.0
+        deadband: 0.2
     DP02_CO2_calc:
         type: float32
         address: 176
-        deadband: 2.0
+        deadband: 0.2
     DP03_CO2_calc:
         type: float32
-        address: 178
-        deadband: 0.1
+        address: 180 # WARNING: EXCHANGED WITH 178
+        deadband: 0.2
     DP04_CO2_calc:
         type: float32
-        address: 180
-        deadband: 0.1
+        address: 178 # WARNING: EXCHANGED WITH 180
+        deadband: 0.2
     DT02_CO2_calc:
         type: float32
         address: 182
@@ -177,37 +178,37 @@ registers:
     DP_EV3C_CO2_calc:
         type: float32
         address: 186
-        deadband: 2.
+        deadband: 0.5
     SC01_CO2_Start_calc:
         type: float32
         address: 190
-        deadband: 2.
+        deadband: 0.5
 
     # OPERATIONAL PARAMETERS
     EV1_valve_pos:
         type: float32
         address: 192
-        deadband: 0.5
+        deadband: 5.
     EV2_valve_pos:
         type: float32
         address: 194
-        deadband: 0.5
+        deadband: 5.
     EV3_valve_pos:
         type: float32
         address: 196
-        deadband: 0.5
+        deadband: 5.
     EV3C_valve_pos:
         type: float32
         address: 198
-        deadband: 0.5
+        deadband: 5.
     LP_speed:
         type: float32
         address: 200
-        deadband: 0.5
+        deadband: 0.
     EH_power:
         type: float32
         address: 202
-        deadband: 0.5
+        deadband: 5.
     temperature_setpoint:
         type: float32
         address: 204
@@ -223,7 +224,7 @@ registers:
     TC04_TSP:
         type: float32
         address: 210
-        deadband: 0.5
+        deadband: 0.2
 
     # SET PARAMETERS
     set_start_chiller:
