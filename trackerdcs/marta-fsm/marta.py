@@ -143,16 +143,14 @@ class MARTAClient(object):
         set_start_chiller = self.register_map["set_start_chiller"].read()
         set_start_co2 = self.register_map["set_start_co2"].read()
 
-        if status == 2 and not set_start_co2:
-            raise RuntimeError("MARTA is status 2 but CO2 set parameter is off: Should not happen!")
-        if status == 1 and set_start_co2:
-            raise RuntimeError("MARTA is status 1 but CO2 set parameter is on: Should not happen!")
+        if set_start_co2 and not set_start_chiller:
+            raise RuntimeError("CO2 is started but not chiller: should not happen!")
 
         if status == 1 and not set_start_chiller:
             self.to_CONNECTED()
-        elif status == 1 and set_start_chiller:
+        elif status == 1 and set_start_chiller and not set_start_co2:
             self.to_CHILLER_RUNNING()
-        elif status == 2:
+        elif (status == 2 or status == 1) and set_start_co2:
             self.to_CO2_RUNNING()
         elif status == 3:
             self.to_ALARM()
