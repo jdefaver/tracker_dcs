@@ -257,7 +257,7 @@ class MARTAClient(object):
         while 1:
             self.update_status()
             force_update = False
-            if counter == 300: # publish full status roughly every 5 minutes
+            if counter == 600: # publish full status roughly every 10 minutes
                 force_update = True
                 counter = 1
             self.publish(force_update)
