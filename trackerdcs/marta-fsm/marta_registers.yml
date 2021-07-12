@@ -136,48 +136,47 @@ registers:
         deadband: 0.5
     SC03_CO2_calc:
         type: float32
-        address: 166
+        address: 168
         deadband: 0.5
     SC04_CO2_calc:
         type: float32
-        address: 168
+        address: 170
         deadband: 0.5
     SC05_CO2_calc:
         type: float32
-        address: 172 # WARNING: EXCHANGED WITH 170
+        address: 172
         deadband: 0.5
-    # WHAT IS THIS?
-    #SC06_CO2_calc:
-    #    type: float32
-    #    address: 172
-    #    deadband: 0.5
-    DP01_CO2_calc:
+    SC06_CO2_calc:
         type: float32
         address: 174
-        deadband: 0.2
-    DP02_CO2_calc:
+        deadband: 0.5
+    DP01_CO2_calc:
         type: float32
         address: 176
         deadband: 0.2
+    DP02_CO2_calc:
+        type: float32
+        address: 178
+        deadband: 0.2
     DP03_CO2_calc:
         type: float32
-        address: 180 # WARNING: EXCHANGED WITH 178
+        address: 180
         deadband: 0.2
     DP04_CO2_calc:
         type: float32
-        address: 178 # WARNING: EXCHANGED WITH 180
+        address: 182
         deadband: 0.2
     DT02_CO2_calc:
         type: float32
-        address: 182
+        address: 184
         deadband: 0.5
     DT03_CO2_calc:
         type: float32
-        address: 184
+        address: 186
         deadband: 0.5
     DP_EV3C_CO2_calc:
         type: float32
-        address: 186
+        address: 188
         deadband: 0.5
     SC01_CO2_Start_calc:
         type: float32
@@ -564,16 +563,17 @@ alarm_codes:
     TT04_R452A_HT_W: "Warning: chiller temperature TT04 high"
     TT04_R452A_HT_FS: "Error: chiller temperature TT04 too high"
 
+    # currently no Modbus registers for those:
     #Interlock_IN_HMI: "Interlock IN trigger"
     #Kill_Switch_HMI: "Kill switch trigger"
 
-    ChTT_IOErr_FS: "?"
-    ChPT_IOErr_FS: "?"
-    EV1_CEr_FS: "?"
-    EV2_CEr_FS: "?"
-    EV3_CEr_FS: "?"
-    CP_Cnt_FS: "?"
-    TT_IOErr_FS: "?"
-    PT_IOErr_FS: "?"
-    EV3C_CEr_FS: "?"
+    ChTT_IOErr_FS: "Chiller temperature sensor failure"
+    ChPT_IOErr_FS: "Chiller pressure sensor failure"
+    EV1_CEr_FS: "EV1 valve driver error"
+    EV2_CEr_FS: "EV2 valve driver error"
+    EV3_CEr_FS: "EV3 valve driver error"
+    CP_Cnt_FS: "Too many chiller compressor starts (alarm not activated)"
+    TT_IOErr_FS: "CO2 temperature sensor failure"
+    PT_IOErr_FS: "CO2 pressure sensor failure"
+    EV3C_CEr_FS: "EV3C valve driver error"
 
