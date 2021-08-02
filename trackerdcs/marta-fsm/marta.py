@@ -213,10 +213,12 @@ class MARTAClient(object):
 
     def status(self, force=False):
         status = dict()
-        for name,reg in self.register_map.items():
-            value = reg.read(force)
-            if value is not None:
-                status[name] = value
+        # make sure we don't just read cached values if we're disconnected:
+        if self.state not in [MARTAStates.INIT, MARTAStates.DISCONNECTED]:
+            for name,reg in self.register_map.items():
+                value = reg.read(force)
+                if value is not None:
+                    status[name] = value
         with self._lock:
             if status or self._fsm_state_changed or force:
                 status["fsm_state"] = str(self.state).split(".")[1]
