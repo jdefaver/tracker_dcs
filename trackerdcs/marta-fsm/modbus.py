@@ -97,7 +97,7 @@ class ModbusRegisterManager:
         for start,length in self.chunks:
             rr = self.client.read_holding_registers(start, length, unit=self.unit)
             if rr.isError():
-                raise ModbusException(f"Failure to read {length} registers starting from address {start}. Error message: {rr.message}")
+                raise ModbusException(f"Failure to read {length} registers starting from address {start}. Error message: {rr}")
             for i,addr in enumerate(range(start, start+length)):
                 self.registers[addr] = rr.registers[i]
 
