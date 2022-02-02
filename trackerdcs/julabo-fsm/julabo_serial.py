@@ -260,7 +260,13 @@ if __name__ == '__main__':
         log.setLevel(logging.DEBUG)
 
     serialChiller = JulaboFSM(remote=args.remote)
-    serialChiller.fsm_connect()
+    # Catch all exceptions when trying to connect
+    # -> we'll stay in DISCONNECTED state, and we can always re-try to connect
+    # using the 'reconnect' MQTT command.
+    try:
+        serialChiller.fsm_connect()
+    except Exception as e:
+        log.error(e)
 
     if args.start_mqtt:
         serialChiller.launch_mqtt(args.mqtt_host)
