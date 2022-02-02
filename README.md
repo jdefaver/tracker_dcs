@@ -140,12 +140,13 @@ podman run --pod tracker_dcs -d --init --name tdcs_caen -e EPICS_CA_NAME_SERVERS
 
 And the Julabo chiller control backend. If running on the PC connected to the serial adapter, run:
 ```
-podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm --device /dev/ttyUSB0:/dev/ttyUSB0:rw localhost/pyepics python -u julabo-fsm/julabo_serial.py --mqtt-host localhost --start-mqtt
+podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm --device /dev/ttyUSB0:/dev/ttyUSB0:rw localhost/pyepics python -u julabo-fsm/julabo_serial.py --port /dev/ttyUSB0 --mqtt-host localhost --start-mqtt
 ```
 If running on a remote PC, run:
 ```
-podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --mqtt-host localhost --start-mqtt --remote
+podman run --pod tracker_dcs -d --init --name tcds_chiller -v ./trackerdcs/julabo-fsm:/usr/src/app/julabo-fsm localhost/pyepics python -u julabo-fsm/julabo_serial.py --port IP:PORT --mqtt-host localhost --start-mqtt
 ```
+Where `IP:PORT` corresponds to the connection opened using the `nc` command above.
 
 Note: when running inside the UCL network EPICS can also work with `-e EPICS_CA_AUTO_ADDR_LIST=130.104.48.188` instead of the above.
 

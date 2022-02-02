@@ -15,11 +15,13 @@ logging.basicConfig(format="== %(asctime)s - %(name)s - %(levelname)s - %(messag
 log.setLevel(logging.INFO)
 
 class JulaboSerial(object):
-    def __init__(self, remote=False):
-        if remote:
-            self.ser = serial.serial_for_url('socket://130.104.48.63:8000', timeout=1)
+    def __init__(self, port):
+        if "dev" in port:
+            # example: /dev/ttyUSB0
+            self.ser = serial.Serial(port, baudrate=4800, parity=serial.PARITY_EVEN, bytesize=serial.SEVENBITS, stopbits=serial.STOPBITS_ONE, rtscts=True, timeout=1)
         else:
-            self.ser = serial.Serial('/dev/ttyUSB0', baudrate=4800, parity=serial.PARITY_EVEN, bytesize=serial.SEVENBITS, stopbits=serial.STOPBITS_ONE, rtscts=True, timeout=1)
+            # example: socket://130.104.48.63:8000
+            self.ser = serial.serial_for_url("socket://" + port, timeout=1)
 
         time.sleep(0.1)
         self.ser.flushOutput()
@@ -97,8 +99,8 @@ class JulaboStates(enum.Enum):
 
 
 class JulaboFSM(object):
-    def __init__(self, remote=False):
-        self.remote = remote
+    def __init__(self, serial_port):
+        self.serial_port = serial_port
 
         transitions = [
             { "trigger": "fsm_connect", "source": JulaboStates.DISCONNECTED, "dest": JulaboStates.CONNECTED, "before": "_connect_serial" }
@@ -116,7 +118,7 @@ class JulaboFSM(object):
         log.info(f"FSM state: {self.state}")
 
     def _connect_serial(self):
-        self.julaboSerial = JulaboSerial(self.remote)
+        self.julaboSerial = JulaboSerial(self.serial_port)
 
         self.machine.add_transition("cmd_on", JulaboStates.OFF, None, before=self.julaboSerial.start)
         self.machine.add_transition("cmd_off", [JulaboStates.ON, JulaboStates.ERROR], None, before=self.julaboSerial.stop)
@@ -241,8 +243,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Debugging tool for julabo chiller")
 
     parser.add_argument("-v", "--verbose", action="store_true")
-    parser.add_argument("-r", "--remote", action="store_true", help="Use remote interface instead of /dev/ttyUSB0")
-
+    parser.add_argument("-p", "--port", help="Port to connect to: either local (e.g. /dev/ttyUSB0), or remote (e.g. IP:PORT)")
     parser.add_argument("--start-mqtt", action="store_true", help="Start MQTT loop and disregard any other commands")
     parser.add_argument("--mqtt-host", help="MQTT broker host")
 
@@ -261,7 +262,7 @@ if __name__ == '__main__':
     if args.verbose:
         log.setLevel(logging.DEBUG)
 
-    serialChiller = JulaboFSM(remote=args.remote)
+    serialChiller = JulaboFSM(serial_port=args.port
     # Catch all exceptions when trying to connect
     # -> we'll stay in DISCONNECTED state, and we can always re-try to connect
     # using the 'reconnect' MQTT command.
