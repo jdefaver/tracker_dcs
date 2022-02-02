@@ -34,14 +34,22 @@ class DCSStates(enum.Enum):
 
 class TrackerDCS(object):
 
-    def __init__(self, configPath, verbose=False):
+    def __init__(self, config_path, verbose=False):
         log.info(f"Initializing DCS")
+        self.config_path = config_path
         self.verbose = verbose
 
         transitions = [
-            { "trigger": "fsm_connect_epics", "source": DCSStates.INIT, "dest": DCSStates.CONNECTED, "before": "_connect_epics" },
+            # initial transition, does essentially the same as "fsm_reload_config", but
+            # puts us into the CONNECTED state (if config loading was successful)
+            { "trigger": "fsm_load_config", "source": DCSStates.INIT, "dest": DCSStates.CONNECTED, "before": "_load_config" },
+            { "trigger": "fsm_reset", "source": [DCSStates.CONNECTED, DCSStates.LV_OFF], "dest": DCSStates.INIT, "before": "_reset" },
             { "trigger": "fsm_reconnect_epics", "source": DCSStates.DISCONNECTED, "dest": DCSStates.CONNECTED, "before": "_reconnect_epics" },
             { "trigger": "fsm_disconnect_epics", "source": "*", "dest": DCSStates.DISCONNECTED },
+            { "trigger": "cmd_lv_on", "source": [DCSStates.LV_OFF, DCSStates.LV_MIX], "dest": None, "before": "switch_lv_on" },
+            { "trigger": "cmd_lv_off", "source": [DCSStates.LV_ON, DCSStates.LV_MIX], "dest": None, "before": "switch_lv_off" },
+            { "trigger": "cmd_hv_on", "source": [DCSStates.LV_ON, DCSStates.HV_MIX, DCSStates.HV_RAMP], "dest": None, "before": "switch_hv_on" },
+            { "trigger": "cmd_hv_off", "source": [DCSStates.HV_ON, DCSStates.HV_MIX, DCSStates.HV_RAMP], "dest": None, "before": "switch_hv_off" },
         ]
 
         self._lock = threading.Lock()
@@ -49,16 +57,16 @@ class TrackerDCS(object):
 
         self.machine = Machine(model=self, states=DCSStates, transitions=transitions, initial=DCSStates.INIT)
 
+        # will print a message every time we enter a state
         for s in DCSStates:
             getattr(self.machine, "on_enter_" + str(s).split(".")[1])("print_fsm")
+
+        self.PV_clear_alarm = epics.PV("cleanroom:ClearAlarm", verbose=self.verbose)
+        self.machine.add_transition("cmd_clear_alarms", DCSStates.ERROR, None, before=lambda: self.PV_clear_alarm.put("Yes"))
         
+        # will hold TrackerChannel instances, as in the config
         self.all_channels = {}
         self.active_channels = {}
-        with open(configPath) as f:
-            self.config = yaml.safe_load(f)
-        self.name = self.config.get("name", "dcs")
-        for chan_id,chan_cfg in self.config["channels"].items():
-            self.add_channel(chan_id, chan_cfg)
 
         log.info(f"Done - state is {self.state}")
 
@@ -67,30 +75,28 @@ class TrackerDCS(object):
             if self._changed:
                 log.info(f"FSM state: {self.state}")
 
-    def add_channel(self, chan_id, config):
-        assert(self.state is DCSStates.INIT)
-        lv = (config["lv"].pop("board"), config["lv"].pop("chan"))
-        hv = (config["hv"].pop("board"), config["hv"].pop("chan"))
-        if "module" in config and config["module"] == "":
-            raise RuntimeError("Cannot use empty module names")
-        module = config.get("module", None)
-        log.debug(f"Adding channel number {chan_id} with lv={lv}, hv={hv}, module={module}")
-        chan = TrackerChannel(chan_id, lv, hv, module, verbose=self.verbose)
-        self.all_channels[chan_id] = chan
-        if chan.active:
-            self.active_channels[chan_id] = chan
+    def _reset(self):
+        with self._lock:
+            self._changed = True  # just to make sure print_fsm() logs the change
+        self.all_channels = {}
+        self.active_channels = {}
 
-    def _connect_epics(self):
-        for chan in self.all_channels.values():
-            chan.fsm_connect_epics()
+    def _load_config(self):
+        with open(self.config_path) as f:
+            config = yaml.safe_load(f)
+        self.name = config.get("name", "dcs")  # name is used to match MQTT commands
+
+        # construct TrackerChannel objects and initialize their epics variables
+        for chan_id,chan_cfg in config["channels"].items():
+            self.add_channel(chan_id, chan_cfg)
 
         # now set all the values
-        global_config = self.config.get("global", {})
+        global_config = config.get("global", {})
         for chan_id,chan in self.all_channels.items():
-            config = self.config["channels"][chan_id]
+            chan_cfg = config["channels"][chan_id]
             for v_c,epics_c in [("lv", chan.epics_LV), ("hv", chan.epics_HV)]:
                 values = dict(global_config.get(v_c, {}))
-                values.update(config.get(v_c, {}))
+                values.update(chan_cfg.get(v_c, {}))
                 for vNm,vV in values.items():
                     if not hasattr(epics_c, vNm) or not isinstance(getattr(epics_c.__class__, vNm), property):
                         logger.error(f"{v_c} EPICS interface has no support for {vNm}")
@@ -103,13 +109,20 @@ class TrackerDCS(object):
                         log.debug(f"Channel {chan_id}: setting {v_c}.{vNm} to {vV} with type {type(vV)}")
                         setattr(epics_c, vNm, vV)
 
-        self.machine.add_transition("cmd_lv_on", [DCSStates.LV_OFF, DCSStates.LV_MIX], None, before=self.switch_lv_on)
-        self.machine.add_transition("cmd_lv_off", [DCSStates.LV_ON, DCSStates.LV_MIX], None, before=self.switch_lv_off)
-        self.machine.add_transition("cmd_hv_on", [DCSStates.LV_ON, DCSStates.HV_MIX, DCSStates.HV_RAMP], None, before=self.switch_hv_on)
-        self.machine.add_transition("cmd_hv_off", [DCSStates.HV_ON, DCSStates.HV_MIX, DCSStates.HV_RAMP], None, before=self.switch_hv_off)
-
-        self.PV_clear_alarm = epics.PV("cleanroom:ClearAlarm", verbose=self.verbose)
-        self.machine.add_transition("cmd_clear_alarms", DCSStates.ERROR, None, before=lambda: self.PV_clear_alarm.put("Yes"))
+    def add_channel(self, chan_id, config):
+        # we pop the board and channel: they are only used here,
+        # while all the other options are forwarded to the channel constructors
+        lv = (config["lv"].pop("board"), config["lv"].pop("chan"))
+        hv = (config["hv"].pop("board"), config["hv"].pop("chan"))
+        if "module" in config and config["module"] == "":
+            raise RuntimeError("Cannot use empty module names")
+        module = config.get("module", None)
+        log.debug(f"Adding channel number {chan_id} with lv={lv}, hv={hv}, module={module}")
+        chan = TrackerChannel(chan_id, lv, hv, module, verbose=self.verbose)
+        self.all_channels[chan_id] = chan
+        if chan.active:
+            self.active_channels[chan_id] = chan
+        chan.fsm_connect_epics()
 
     def _reconnect_epics(self):
         for chan in self.all_channels.values():
@@ -175,7 +188,11 @@ class TrackerDCS(object):
                 self._changed = True
 
     def command(self, topic, message):
-        commands = ["switch", "setv", "clear", "refresh", "reconnect"]
+        # cannot do anything until we have initialized channels
+        if self.state == DCSStates.INIT:
+            return
+
+        commands = ["switch", "setv", "clear", "refresh", "reload", "reconnect"]
         parts = topic.split("/")
         device, cmd, command = parts[:3]
         assert(device == self.name)
@@ -209,6 +226,10 @@ class TrackerDCS(object):
             self.cmd_clear_alarms()
         elif command == "refresh":
             self.publish(force=True)
+        elif command == "reload":
+            log.info("Destroying current configuration; reloading config file and re-initializing monitoring for new list of channels!")
+            self.fsm_reset()
+            self.fsm_load_config()
         elif command == "reconnect":
             log.debug("Reconnecting!")
             self.fsm_reconnect_epics()
@@ -275,5 +296,5 @@ if __name__ == "__main__":
         logging.getLogger("epics").setLevel(logging.DEBUG)
 
     device = TrackerDCS(args.config, verbose=args.verbose)
-    device.fsm_connect_epics()
+    device.fsm_load_config()
     device.launch_mqtt(args.mqtt_host)
