@@ -112,7 +112,7 @@ class JulaboFSM(object):
         log.info(f"Done - state is {self.state}")
 
     def print_fsm(self):
-        """Log FSM state every time a new state is entered - CAUTION: do not change the state while owning the lock!"""
+        """Log FSM state every time a new state is entered"""
         log.info(f"FSM state: {self.state}")
 
     def _connect_serial(self):
@@ -147,14 +147,18 @@ class JulaboFSM(object):
         assert(cmd == "cmd")
         assert(command in commands)
 
+        if command == "reconnect":
+            self.fsm_connect()
+
+        if self.state is JulaboStates.DISCONNECTED:
+            return
+
         if command == "start":
             self.cmd_on()
         elif command == "stop":
             self.cmd_off()
         elif command == "refresh":
             self.publish()
-        elif command == "reconnect":
-            self.fsm_connect()
         elif command == "useExt":
             self.julaboSerial.useExternalPt100()
         elif command == "useInt":
@@ -181,28 +185,26 @@ class JulaboFSM(object):
 
     def status(self):
         status = {}
-        try:
-            status_code = self.update_status()
-            status.update({
-                "status_code": status_code,
-                "internal_temp": self.julaboSerial.readActualInt(),
-                "setpoint_1": self.julaboSerial.readSetPoint(1),
-                "setpoint_2": self.julaboSerial.readSetPoint(2),
-                "setpoint_3": self.julaboSerial.readSetPoint(3),
-                "used_setpoint": self.julaboSerial.getUsedSetPoint(),
-                "power": self.julaboSerial.readPower(),
-                "ext_is_used": self.julaboSerial.externalIsUsed(),
-            })
+        if self.state != JulaboStates.DISCONNECTED:
             try:
-                status["external_temp"] = self.julaboSerial.readActualExtPt100()
-            except ValueError:
-                status["external_temp"]  = 0
-        except serial.serialutil.SerialException as e:
-            log.error(f"Serial error while trying to get the chiller status: {e}")
-            self.to_DISCONNECTED()
-        except Exception as e:
-            log.error(f"Error while reading all the values for publication: {e}")
-            self.to_ERROR()
+                status_code = self.update_status()
+                status.update({
+                    "status_code": status_code,
+                    "internal_temp": self.julaboSerial.readActualInt(),
+                    "setpoint_1": self.julaboSerial.readSetPoint(1),
+                    "setpoint_2": self.julaboSerial.readSetPoint(2),
+                    "setpoint_3": self.julaboSerial.readSetPoint(3),
+                    "used_setpoint": self.julaboSerial.getUsedSetPoint(),
+                    "power": self.julaboSerial.readPower(),
+                    "ext_is_used": self.julaboSerial.externalIsUsed(),
+                })
+                try:
+                    status["external_temp"] = self.julaboSerial.readActualExtPt100()
+                except ValueError:
+                    status["external_temp"]  = 0
+            except Exception as e:
+                log.error(f"Error while trying to get the chiller status: {e}")
+                self.to_DISCONNECTED()
         status["fsm_state"] = str(self.state).split(".")[1]
         return status
 
