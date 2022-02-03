@@ -49,7 +49,7 @@ class TrackerChannel(object):
         # debug state transitions
         for s in PSStates:
             getattr(self.machine, "on_enter_" + str(s).split(".")[1])("print_fsm")
-        
+
         # update our state depending on the actual CAEN state as soon as we connect
         self.machine.on_enter_CONNECTED("epics_update_status")
 
@@ -57,7 +57,9 @@ class TrackerChannel(object):
         self._changed = False
 
     def print_fsm(self):
-        self.log.debug(f"FSM state: {self.state}")
+        with self._lock:
+            if self._changed:
+                self.log.info(f"FSM state: {self.state}")
 
     def _connect_epics(self):
         self.epics_LV = EPICSLVChannel(self.lv_board, self.lv_chan, self.epics_connection_callback, self.epics_update_callback)
@@ -91,10 +93,10 @@ class TrackerChannel(object):
 
     def epics_update_callback(self, pvname, value, **kwargs):
         self.log.debug(f"In update callback: got {pvname}, {value}")
-        if pvname.endswith("Pw") or pvname.endswith("Status"):
-            self.epics_update_status()
         with self._lock:
             self._changed = True
+        if pvname.endswith("Status"):
+            self.epics_update_status()
 
     def epics_connection_callback(self, pvname, conn, **kwargs):
         self.log.debug(f"In connection callback: got {pvname}, {conn}")
