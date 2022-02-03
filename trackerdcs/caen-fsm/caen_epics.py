@@ -39,10 +39,10 @@ class EPICSChannel(object):
         self.chan = chan
         self.prefix = f"cleanroom:{self.board:02}:{self.chan:03}:"
         self._PVs = {}
-        for var in ["Pw", "Status", "Trip", "TripInt", "TripExt"]:
+        for var in ["V0Set", "I0Set", "Pw", "Status", "Trip", "TripInt", "TripExt"]:
             self._PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
             time.sleep(sleep)
-        for var in ["V0Set", "I0Set", "VMon", "IMon"]:
+        for var in ["VMon", "IMon"]:
             self._PVs[var] = DeadbandPV(self.prefix + var, dead_band=0.01, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
             time.sleep(sleep)
 
@@ -77,14 +77,15 @@ class EPICSChannel(object):
 
     @property
     def setV(self):
-        return self._PVs["V0Set"].get()
+        # V0Set and I0Set are not monitored automatically; we have to force getting the value
+        return self._PVs["V0Set"].get(use_monitor=False)
     @setV.setter
     def setV(self, value):
         self._PVs["V0Set"].put(value)
 
     @property
     def maxI(self):
-        return self._PVs["I0Set"].get()
+        return self._PVs["I0Set"].get(use_monitor=False)
     @maxI.setter
     def maxI(self, value):
         self._PVs["I0Set"].put(value)
