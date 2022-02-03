@@ -39,9 +39,14 @@ class EPICSChannel(object):
         self.chan = chan
         self.prefix = f"cleanroom:{self.board:02}:{self.chan:03}:"
         self._PVs = {}
-        for var in ["V0Set", "I0Set", "Pw", "Status", "Trip", "TripInt", "TripExt"]:
+        for var in ["V0Set", "I0Set", "Pw", "Trip", "TripInt", "TripExt"]:
+            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose, connection_callback=connection_callback)
+            time.sleep(sleep)
+        # monitored, no deadband
+        for var in ["Status"]:
             self._PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
             time.sleep(sleep)
+        # monitored, deadband
         for var in ["VMon", "IMon"]:
             self._PVs[var] = DeadbandPV(self.prefix + var, dead_band=0.01, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
             time.sleep(sleep)
@@ -77,15 +82,14 @@ class EPICSChannel(object):
 
     @property
     def setV(self):
-        # V0Set and I0Set are not monitored automatically; we have to force getting the value
-        return self._PVs["V0Set"].get(use_monitor=False)
+        return self._PVs["V0Set"].get()
     @setV.setter
     def setV(self, value):
         self._PVs["V0Set"].put(value)
 
     @property
     def maxI(self):
-        return self._PVs["I0Set"].get(use_monitor=False)
+        return self._PVs["I0Set"].get()
     @maxI.setter
     def maxI(self, value):
         self._PVs["I0Set"].put(value)
@@ -115,9 +119,11 @@ class EPICSLVChannel(EPICSChannel):
     def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1):
         super().__init__(board, chan, connection_callback, update_callback, verbose, sleep)
     
+        # not monitored
         for var in ["UNVThr", "OVVThr", "RUpTime", "RDwTime"]:
-            self._PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
+            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose, connection_callback=connection_callback)
             time.sleep(sleep)
+        # monitored
         for var in ["Temp"]:
             self._PVs[var] = DeadbandPV(self.prefix + var, dead_band=2, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
             time.sleep(sleep)
@@ -166,8 +172,9 @@ class EPICSHVChannel(EPICSChannel):
         for var in ["I0Set", "IMon"]:
             self._PVs[var].deadBand = 0.01 # 0.01=10nA in high-power mode; 0.001=1nA in high-res mode
 
+        # not monitored
         for var in ["RUp", "RDWn", "ImRange", "PDwn"]:
-            self._PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
+            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose, connection_callback=connection_callback)
             time.sleep(sleep)
 
     # ramp speed in V/s
