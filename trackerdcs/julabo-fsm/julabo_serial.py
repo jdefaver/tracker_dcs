@@ -262,7 +262,7 @@ if __name__ == '__main__':
     if args.verbose:
         log.setLevel(logging.DEBUG)
 
-    serialChiller = JulaboFSM(serial_port=args.port
+    serialChiller = JulaboFSM(serial_port=args.port)
     # Catch all exceptions when trying to connect
     # -> we'll stay in DISCONNECTED state, and we can always re-try to connect
     # using the 'reconnect' MQTT command.
