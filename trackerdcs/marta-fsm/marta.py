@@ -34,27 +34,31 @@ class MARTAClient(object):
         log.info(f"Initializing MARTA client")
 
         transitions = [
-            { "trigger": "fsm_connect_modbus", "source": MARTAStates.INIT, "dest": MARTAStates.CONNECTED, "before": "_connect_modbus" },
-            { "trigger": "fsm_reconnect_modbus", "source": MARTAStates.DISCONNECTED, "dest": MARTAStates.CONNECTED, "before": "_reconnect_modbus" },
+            { "trigger": "fsm_connect_modbus", "source": MARTAStates.DISCONNECTED, "dest": MARTAStates.CONNECTED, "before": "_connect_modbus" },
             { "trigger": "fsm_disconnect_modbus", "source": "*", "dest": MARTAStates.DISCONNECTED },
+            { "trigger": "cmd_start_chiller", "source": MARTAStates.CONNECTED, "dest": None, "before": self.start_chiller },
+            { "trigger": "cmd_start_co2", "source": MARTAStates.CHILLER_RUNNING, "dest": None, "before": self.start_co2 },
+            { "trigger": "cmd_stop_co2", "source": MARTAStates.CO2_RUNNING, "dest": None, "before": self.stop_co2 },
+            { "trigger": "cmd_stop_chiller", "source": MARTAStates.CHILLER_RUNNING, "dest": None, "before": self.stop_chiller },
+            { "trigger": "cmd_clear_alarms", "source": MARTAStates.ALARM, "dest": None, "before": self.clear_alarms },
         ]
 
         self._lock = threading.Lock()
         self._fsm_state_changed = False
-        self._old_state = MARTAStates.INIT
+        self._old_state = MARTAStates.DISCONNECTED
 
-        self.machine = Machine(model=self, states=MARTAStates, transitions=transitions, initial=MARTAStates.INIT)
-
-        for s in MARTAStates:
-            getattr(self.machine, "on_enter_" + str(s).split(".")[1])("_state_change")
-
-        self.modbus_client = ModbusTcpClient(ipAddr)
-        self.slaveId = slaveId
-        self.register_map = dict()
-        self.modbus_manager = None
-
+        self.machine = Machine(model=self, states=MARTAStates, transitions=transitions, initial=self._old_state, after_state_change=self._state_change)
         with open(configPath) as _f:
             self.config = yaml.load(_f, Loader=yaml.loader.SafeLoader)
+
+        # modbus client - not connected yet to MARTA
+        self.modbus_client = ModbusTcpClient(ipAddr)
+        self.slaveId = slaveId
+        # register manager - does not yet read register values
+        self.modbus_manager = modbus.ModbusRegisterManager(self.modbus_client, unit=self.slaveId)
+        self.register_map = dict()
+        for name,cfg in self.config["registers"].items():
+            self.register_map[name] = self.modbus_manager.makeProxy(name, **cfg)
 
         log.info(f"Done - state is {self.state}")
 
@@ -71,22 +75,7 @@ class MARTAClient(object):
     def _connect_modbus(self):
         if not self.modbus_client.connect():
             raise ModbusException("Failed to connect to MARTA")
-
-        # create register manager and read all register values
-        self.modbus_manager = modbus.ModbusRegisterManager(self.modbus_client, unit=self.slaveId)
-        for name,cfg in self.config["registers"].items():
-            self.register_map[name] = self.modbus_manager.makeProxy(name, **cfg)
         self.modbus_manager.update()
-
-        self.machine.add_transition("cmd_start_chiller", MARTAStates.CONNECTED, None, before=self.start_chiller)
-        self.machine.add_transition("cmd_start_co2", MARTAStates.CHILLER_RUNNING, None, before=self.start_co2)
-        self.machine.add_transition("cmd_stop_co2", MARTAStates.CO2_RUNNING, None, before=self.stop_co2)
-        self.machine.add_transition("cmd_stop_chiller", MARTAStates.CHILLER_RUNNING, None, before=self.stop_chiller)
-        self.machine.add_transition("cmd_clear_alarms", MARTAStates.ALARM, None, before=self.clear_alarms)
-
-    def _reconnect_modbus(self):
-        if not self.modbus_client.connect():
-            raise ModbusException("Failed to connect to MARTA")
 
     def start_chiller(self):
         try:
@@ -198,7 +187,7 @@ class MARTAClient(object):
             self.publish(force=True)
         elif command == "reconnect":
             log.debug("Reconnecting!")
-            self.fsm_reconnect_modbus()
+            self.fsm_connect_modbus()
 
     def publish(self, force=False):
         if hasattr(self, "mqtt_client"):
@@ -281,5 +270,8 @@ if __name__ == "__main__":
         log.setLevel(logging.DEBUG)
 
     device = MARTAClient(args.marta_ip, args.slave_id, args.config)
-    device.fsm_connect_modbus()
     device.launch_mqtt(args.mqtt_host)
+    try:
+        device.fsm_connect_modbus()
+    except ModbusException as e:
+        log.error(e)
