@@ -39,9 +39,8 @@ class TrackerChannel(object):
         self.hv_board, self.hv_chan = hv
 
         transitions = [
-            { "trigger": "fsm_connect_epics", "source": PSStates.INIT, "dest": PSStates.CONNECTED, "before": "_connect_epics" },
-            { "trigger": "fsm_reconnect_epics", "source": PSStates.DISCONNECTED, "dest": PSStates.CONNECTED, "before": "_reconnect_epics" },
-            { "trigger": "fsm_disconnect_epics", "source": "*", "dest": PSStates.DISCONNECTED },
+            { "trigger": "fsm_init_epics", "source": PSStates.INIT, "dest": PSStates.DISCONNECTED, "before": "_init_epics", "after": "check_connection_status" },
+            { "trigger": "fsm_reconnect_epics", "source": PSStates.DISCONNECTED, "dest": None, "before": "_reconnect_epics" },
         ]
 
         self.machine = Machine(model=self, states=PSStates, transitions=transitions, initial=PSStates.INIT)
@@ -56,12 +55,7 @@ class TrackerChannel(object):
         self._lock = threading.Lock()
         self._changed = False
 
-    def print_fsm(self):
-        with self._lock:
-            if self._changed:
-                self.log.info(f"FSM state: {self.state}")
-
-    def _connect_epics(self):
+    def _init_epics(self):
         self.epics_LV = EPICSLVChannel(self.lv_board, self.lv_chan, self.epics_connection_callback, self.epics_update_callback)
         self.epics_HV = EPICSHVChannel(self.hv_board, self.hv_chan, self.epics_connection_callback, self.epics_update_callback)
 
@@ -70,12 +64,35 @@ class TrackerChannel(object):
         self.machine.add_transition("cmd_hv_on", PSStates.LV_ON, None, before=self.epics_HV.switch_on)
         self.machine.add_transition("cmd_hv_off", [PSStates.HV_ON, PSStates.HV_RAMP], None, before=self.epics_HV.switch_off)
 
+    def check_connection_status(self):
+        if self.state is PSStates.INIT:
+            return
+        if self.epics_LV.is_alive and self.epics_HV.is_alive:
+            if self.state is PSStates.DISCONNECTED:
+                self.to_CONNECTED()
+                with self._lock:
+                    self._changed = True
+        elif self.state is not PSStates.DISCONNECTED:
+            self.to_DISCONNECTED()
+            with self._lock:
+                self._changed = True
+
+    def epics_connection_callback(self, pvname, conn, **kwargs):
+        self.log.debug(f"In connection callback: got {pvname}, {conn}")
+        self.check_connection_status()
+
+    def print_fsm(self):
+        with self._lock:
+            if self._changed:
+                self.log.info(f"FSM state: {self.state}")
+
     def _reconnect_epics(self):
         self.epics_LV.reconnect()
         self.epics_HV.reconnect()
 
     def epics_update_status(self):
         """Force FSM states depending on what EPICS tells us on the CAEN state"""
+        self.check_connection_status()
         if self.state not in [PSStates.DISCONNECTED, PSStates.INIT]:
             if self.epics_HV.status is not None and self.epics_HV.status > 5:
                 self.to_ERROR()
@@ -97,11 +114,6 @@ class TrackerChannel(object):
             self._changed = True
         if pvname.endswith("Status"):
             self.epics_update_status()
-
-    def epics_connection_callback(self, pvname, conn, **kwargs):
-        self.log.debug(f"In connection callback: got {pvname}, {conn}")
-        if not conn:
-            self.fsm_disconnect_epics()
 
     def publish(self, force=False):
         if hasattr(self, "client") and self.state not in [PSStates.DISCONNECTED, PSStates.INIT]:

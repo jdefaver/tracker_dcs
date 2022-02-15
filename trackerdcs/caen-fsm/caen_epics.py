@@ -34,22 +34,34 @@ class DeadbandPV(epics.PV):
 
 
 class EPICSChannel(object):
-    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1):
+    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1, connection_timeout=0.1):
         self.board = board
         self.chan = chan
         self.prefix = f"cleanroom:{self.board:02}:{self.chan:03}:"
         self._PVs = {}
         for var in ["V0Set", "I0Set", "Pw", "Trip", "TripInt", "TripExt"]:
-            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose, connection_callback=connection_callback)
+            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose,
+                                      connection_callback=connection_callback,
+                                     connection_timeout=connection_timeout)
             time.sleep(sleep)
         # monitored, no deadband
         for var in ["Status"]:
-            self._PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
+            self._PVs[var] = epics.PV(self.prefix + var, auto_monitor=True, verbose=verbose,
+                                      callback=update_callback,
+                                      connection_callback=connection_callback,
+                                     connection_timeout=connection_timeout)
             time.sleep(sleep)
         # monitored, deadband
         for var in ["VMon", "IMon"]:
-            self._PVs[var] = DeadbandPV(self.prefix + var, dead_band=0.01, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
+            self._PVs[var] = DeadbandPV(self.prefix + var, dead_band=0.01, auto_monitor=True, verbose=verbose,
+                                        callback=update_callback,
+                                        connection_callback=connection_callback,
+                                       connection_timeout=connection_timeout)
             time.sleep(sleep)
+
+    @property
+    def is_alive(self):
+        return all(pv.connected for pv in self._PVs.values())
 
     def reconnect(self):
         for pv in self._PVs.values():
@@ -116,16 +128,21 @@ class EPICSChannel(object):
         self._PVs["TripExt"].put(value)
 
 class EPICSLVChannel(EPICSChannel):
-    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1):
-        super().__init__(board, chan, connection_callback, update_callback, verbose, sleep)
+    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1, connection_timeout=0.1):
+        super().__init__(board, chan, connection_callback, update_callback, verbose, sleep, connection_timeout)
     
         # not monitored
         for var in ["UNVThr", "OVVThr", "RUpTime", "RDwTime"]:
-            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose, connection_callback=connection_callback)
+            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose,
+                                      connection_callback=connection_callback,
+                                     connection_timeout=connection_timeout)
             time.sleep(sleep)
         # monitored
         for var in ["Temp"]:
-            self._PVs[var] = DeadbandPV(self.prefix + var, dead_band=2, auto_monitor=True, verbose=verbose, callback=update_callback, connection_callback=connection_callback)
+            self._PVs[var] = DeadbandPV(self.prefix + var, dead_band=2, auto_monitor=True, verbose=verbose,
+                                        callback=update_callback,
+                                        connection_callback=connection_callback,
+                                       connection_timeout=connection_timeout)
             time.sleep(sleep)
 
     @property
@@ -162,8 +179,8 @@ class EPICSLVChannel(EPICSChannel):
 
 
 class EPICSHVChannel(EPICSChannel):
-    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1):
-        super().__init__(board, chan, connection_callback, update_callback, verbose, sleep)
+    def __init__(self, board, chan, connection_callback, update_callback, verbose=False, sleep=0.1, connection_timeout=0.1):
+        super().__init__(board, chan, connection_callback, update_callback, verbose, sleep, connection_timeout)
 
         # adjust dead bands from EPICSChannel values
         # here currents are in uA
@@ -174,7 +191,9 @@ class EPICSHVChannel(EPICSChannel):
 
         # not monitored
         for var in ["RUp", "RDWn", "ImRange", "PDwn"]:
-            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose, connection_callback=connection_callback)
+            self._PVs[var] = epics.PV(self.prefix + var, verbose=verbose,
+                                      connection_callback=connection_callback,
+                                     connection_timeout=connection_timeout)
             time.sleep(sleep)
 
     # ramp speed in V/s

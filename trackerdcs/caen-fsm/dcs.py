@@ -42,10 +42,9 @@ class TrackerDCS(object):
         transitions = [
             # initial transition, does essentially the same as "fsm_reload_config", but
             # puts us into the CONNECTED state (if config loading was successful)
-            { "trigger": "fsm_load_config", "source": DCSStates.INIT, "dest": DCSStates.CONNECTED, "before": "_load_config" },
+            { "trigger": "fsm_load_config", "source": DCSStates.INIT, "dest": DCSStates.DISCONNECTED, "before": "_load_config" },
             { "trigger": "fsm_reset", "source": [DCSStates.CONNECTED, DCSStates.LV_OFF], "dest": DCSStates.INIT, "before": "_reset" },
             { "trigger": "fsm_reconnect_epics", "source": DCSStates.DISCONNECTED, "dest": DCSStates.CONNECTED, "before": "_reconnect_epics" },
-            { "trigger": "fsm_disconnect_epics", "source": "*", "dest": DCSStates.DISCONNECTED },
             { "trigger": "cmd_lv_on", "source": [DCSStates.LV_OFF, DCSStates.LV_MIX], "dest": None, "before": "switch_lv_on" },
             { "trigger": "cmd_lv_off", "source": [DCSStates.LV_ON, DCSStates.LV_MIX], "dest": None, "before": "switch_lv_off" },
             { "trigger": "cmd_hv_on", "source": [DCSStates.LV_ON, DCSStates.HV_MIX, DCSStates.HV_RAMP], "dest": None, "before": "switch_hv_on" },
@@ -122,7 +121,7 @@ class TrackerDCS(object):
         self.all_channels[chan_id] = chan
         if chan.active:
             self.active_channels[chan_id] = chan
-        chan.fsm_connect_epics()
+        chan.fsm_init_epics()
 
     def _reconnect_epics(self):
         for chan in self.all_channels.values():
