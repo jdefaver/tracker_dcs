@@ -18,7 +18,7 @@ class JulaboSerial(object):
     def __init__(self, port):
         if "dev" in port:
             # example: /dev/ttyUSB0
-            self.ser = serial.Serial(port, baudrate=4800, parity=serial.PARITY_EVEN, bytesize=serial.SEVENBITS, stopbits=serial.STOPBITS_ONE, rtscts=True, timeout=1)
+            self.ser = serial.Serial(port, baudrate=9600, parity=serial.PARITY_NONE, bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, rtscts=True, timeout=1)
         else:
             # example: socket://130.104.48.63:8000
             self.ser = serial.serial_for_url("socket://" + port, timeout=1)
