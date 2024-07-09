@@ -2,9 +2,10 @@ certifi==2020.4.5.1
 chardet==3.0.4
 paho-mqtt==1.5.0
 pkginfo==1.5.0.1
+pyepics==3.5.0
+pymodbus==2.5.2
+pyserial==3.5
+PyYAML==5.4.1
+six==1.16.0
 tqdm==4.30.0
-pyepics
-transitions
-pyserial
-pyyaml
-pymodbus
+transitions==0.8.8
